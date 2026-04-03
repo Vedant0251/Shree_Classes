@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shree Classes (Dada) - Coaching Institute Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="styles.css?v=6.0">
+</head>
+<body>
+  <!-- Landing Page -->
+  <div id="landing-page" class="page active">
+    <div class="floating-icons">
+      <i class="fas fa-graduation-cap floating-icon" style="left: 10%; animation-delay: 0s; font-size: 30px;"></i>
+      <i class="fas fa-book floating-icon" style="left: 20%; animation-delay: 2s; font-size: 25px;"></i>
+      <i class="fas fa-pencil-alt floating-icon" style="left: 35%; animation-delay: 4s; font-size: 20px;"></i>
+      <i class="fas fa-user-graduate floating-icon" style="left: 50%; animation-delay: 6s; font-size: 35px;"></i>
+      <i class="fas fa-star floating-icon" style="left: 65%; animation-delay: 8s; font-size: 22px;"></i>
+      <i class="fas fa-trophy floating-icon" style="left: 80%; animation-delay: 10s; font-size: 28px;"></i>
+      <i class="fas fa-award floating-icon" style="left: 90%; animation-delay: 12s; font-size: 24px;"></i>
+    </div>
+    
+    <div class="hero-gradient min-h-screen flex items-center justify-center">
+      <div class="text-center text-white p-8">
+        <div class="float-animation mb-8">
+          <i class="fas fa-graduation-cap text-6xl mb-4"></i>
+        </div>
+        <h1 class="text-5xl font-bold mb-4">
+          Shree <span class="text-yellow-400">Classes</span>
+        </h1>
+        <p class="text-xl mb-2 opacity-90">(Dada)</p>
+        <p class="text-lg mb-12 opacity-80">Excellence in Education Since 2020</p>
+        
+        <div class="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
+          <button onclick="showUnifiedLogin()" class="bg-teal-custom hover:bg-teal-dark text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 hover:shadow-xl">
+            <i class="fas fa-sign-in-alt mr-2"></i>
+            Login
+          </button>
+        </div>
+        
+        <div class="mt-16 text-sm opacity-70">
+          <p>© 2025 Shree Classes (Dada). All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Page -->
+  <div id="login-page" class="page">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-100">
+      <div class="max-w-md w-full space-y-8 card p-8 fade-in">
+        <div class="text-center">
+          <h1 class="text-4xl logo-text mb-2">Shree <span>Classes</span></h1>
+          <p class="text-xl font-medium text-gray-600">(Dada)</p>
+          <p class="text-sm text-gray-500 mt-2">Student Registration</p>
+        </div>
+        
+        <div class="floating-icons">
+          <i class="fas fa-graduation-cap floating-icon" style="left: 10%; animation-delay: 0s; font-size: 30px;"></i>
+          <i class="fas fa-book floating-icon" style="left: 20%; animation-delay: 2s; font-size: 25px;"></i>
+          <i class="fas fa-pencil-alt floating-icon" style="left: 35%; animation-delay: 4s; font-size: 20px;"></i>
+          <i class="fas fa-user-graduate floating-icon" style="left: 50%; animation-delay: 6s; font-size: 35px;"></i>
+          <i class="fas fa-star floating-icon" style="left: 65%; animation-delay: 8s; font-size: 22px;"></i>
+          <i class="fas fa-trophy floating-icon" style="left: 80%; animation-delay: 10s; font-size: 28px;"></i>
+          <i class="fas fa-award floating-icon" style="left: 90%; animation-delay: 12s; font-size: 24px;"></i>
+        </div>
+        
+        <div id="login-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <span class="block sm:inline" id="error-message"></span>
+        </div>
+        
+        <div id="login-success" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+          <span class="block sm:inline" id="success-message"></span>
+        </div>
+        
+        <!-- Login Form -->
+        <div id="login-form-section">
+          <div class="text-center mb-8">
+            <i class="fas fa-sign-in-alt text-6xl text-teal-custom mb-4"></i>
+            <h2 class="text-3xl font-bold text-gray-800">Welcome Back</h2>
+            <p class="text-xl font-medium text-gray-600">Shree Classes (Dada)</p>
+            <p class="text-sm text-gray-500 mt-2">Enter your credentials to continue</p>
+          </div>
+          
+          <form id="login-form" onsubmit="return handleUnifiedLogin()">
+            <div class="space-y-4">
+              <div>
+                <label for="login-username" class="form-label">Username</label>
+                <input id="login-username" name="username" type="text" autocomplete="username" required class="form-control" placeholder="Enter your username">
+              </div>
+              
+              <div>
+                <label for="login-password" class="form-label">Password</label>
+                <input id="login-password" name="password" type="password" autocomplete="current-password" required class="form-control" placeholder="Enter your password">
+              </div>
+              
+              <div class="text-center">
+                <button type="button" onclick="showAccessRequest()" class="text-teal-custom hover:underline text-sm">
+                  <i class="fas fa-user-plus mr-1"></i>
+                  New Student? Request Access
+                </button>
+                <button type="button" onclick="showTeacherRequest()" class="text-teal-custom hover:underline text-sm ml-4">
+                  <i class="fas fa-chalkboard-teacher mr-1"></i>
+                  New Teacher? Apply Here
+                </button>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <button type="submit" class="btn-primary w-full p-3 rounded-md">
+                <i class="fas fa-sign-in-alt mr-2"></i>
+                Log in
+              </button>
+            </div>
+          </form>
+          
+          <div class="text-center mt-4">
+            <button onclick="showLanding()" class="text-teal-custom hover:underline text-sm">
+              <i class="fas fa-arrow-left mr-1"></i>
+              Back to Home
+            </button>
+          </div>
+        </div>
+        
+        <!-- Access Request Form -->
+        <div id="access-request-section" class="hidden">
+          <div class="text-center mb-8">
+            <i class="fas fa-user-plus text-6xl text-teal-custom mb-4"></i>
+            <h2 class="text-3xl font-bold text-gray-800">Request Access</h2>
+            <p class="text-xl font-medium text-gray-600">Shree Classes (Dada)</p>
+            <p class="text-sm text-gray-500 mt-2">Request access to the system</p>
+          </div>
+          
+          <form id="access-request-form" onsubmit="return handleAccessRequest()">
+            <div class="space-y-4">
+              <div>
+                <label for="request-username" class="form-label">Username</label>
+                <input id="request-username" name="username" type="text" required class="form-control" placeholder="Choose your username">
+              </div>
+              
+              <div>
+                <label for="request-name" class="form-label">Full Name</label>
+                <input id="request-name" name="name" type="text" required class="form-control" placeholder="Enter your full name">
+              </div>
+              
+              <div>
+                <label for="request-access" class="form-label">Access Request</label>
+                <select id="request-access" name="accessRequest" required class="form-control" style="height: auto;">
+                  <option value="">Select access type</option>
+                  <option value="full">Full Access - All Classes</option>
+                  <option value="standard">Standard Only - Current Class</option>
+                  <option value="trial">Trial Access - 30 Days</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <button type="submit" class="btn-primary w-full p-3 rounded-md">
+                <i class="fas fa-paper-plane mr-2"></i>
+                Send Access Request
+              </button>
+            </div>
+            
+            <div class="text-center mt-4">
+              <button onclick="showLoginForm()" class="text-teal-custom hover:underline text-sm">
+                <i class="fas fa-arrow-left mr-1"></i>
+                Back to Login
+              </button>
+              <button onclick="showLanding()" class="text-teal-custom hover:underline text-sm ml-4">
+                <i class="fas fa-home mr-1"></i>
+                Home
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Teacher Request Form -->
+        <div id="teacher-request-section" class="hidden">
+          <div class="text-center mb-8">
+            <i class="fas fa-chalkboard-teacher text-6xl text-teal-custom mb-4"></i>
+            <h2 class="text-3xl font-bold text-gray-800">Teacher Application</h2>
+            <p class="text-xl font-medium text-gray-600">Shree Classes (Dada)</p>
+            <p class="text-sm text-gray-500 mt-2">Apply to join our teaching team</p>
+          </div>
+          
+          <form id="teacher-request-form" onsubmit="return handleTeacherRequest()">
+            <div class="space-y-4">
+              <div>
+                <label for="teacher-username" class="form-label">Username</label>
+                <input id="teacher-username" name="username" type="text" required class="form-control" placeholder="Choose your username">
+              </div>
+              
+              <div>
+                <label for="teacher-name" class="form-label">Full Name</label>
+                <input id="teacher-name" name="name" type="text" required class="form-control" placeholder="Enter your full name">
+              </div>
+              
+              <div>
+                <label for="teacher-subject" class="form-label">Subject</label>
+                <select id="teacher-subject" name="subject" required class="form-control" style="height: auto;">
+                  <option value="">Select your subject</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Science">Science</option>
+                  <option value="English">English</option>
+                  <option value="Marathi">Marathi</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="History">History</option>
+                  <option value="Geography">Geography</option>
+                  <option value="Computer">Computer</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="teacher-experience" class="form-label">Experience (Years)</label>
+                <input id="teacher-experience" name="experience" type="number" min="0" max="50" required class="form-control" placeholder="Years of teaching experience">
+              </div>
+              
+              <div>
+                <label for="teacher-standards" class="form-label">Preferred Standards</label>
+                <div class="space-y-2">
+                  <label class="flex items-center">
+                    <input type="checkbox" name="standards" value="5" class="mr-2">
+                    <span>5th Standard</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" name="standards" value="6" class="mr-2">
+                    <span>6th Standard</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" name="standards" value="7" class="mr-2">
+                    <span>7th Standard</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" name="standards" value="8" class="mr-2">
+                    <span>8th Standard</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" name="standards" value="9" class="mr-2">
+                    <span>9th Standard</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="checkbox" name="standards" value="10" class="mr-2">
+                    <span>10th Standard</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label for="teacher-phone" class="form-label">Phone Number</label>
+                <input id="teacher-phone" name="phone" type="tel" required class="form-control" placeholder="Your contact number">
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <button type="submit" class="btn-primary w-full p-3 rounded-md">
+                <i class="fas fa-paper-plane mr-2"></i>
+                Submit Application
+              </button>
+            </div>
+            
+            <div class="text-center mt-4">
+              <button onclick="showLoginForm()" class="text-teal-custom hover:underline text-sm">
+                <i class="fas fa-arrow-left mr-1"></i>
+                Back to Login
+              </button>
+              <button onclick="showLanding()" class="text-teal-custom hover:underline text-sm ml-4">
+                <i class="fas fa-home mr-1"></i>
+                Home
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signup Page -->
+  <div id="signup-page" class="page">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-100">
+      <div class="max-w-md w-full space-y-8 card p-8 fade-in">
+        <div class="text-center">
+          <h1 class="text-4xl logo-text mb-2">Shree <span>Classes</span></h1>
+          <p class="text-xl font-medium text-gray-600">(Dada)</p>
+          <p class="text-sm text-gray-500 mt-2">Student Registration</p>
+        </div>
+        
+        <div id="signup-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <span class="block sm:inline" id="signup-error-message"></span>
+        </div>
+        
+        <div id="signup-success" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+          <span class="block sm:inline" id="signup-success-message"></span>
+        </div>
+        
+        <!-- Step 1: Basic Information -->
+        <div id="signup-step-1">
+          <form id="signup-form" onsubmit="return handleSignupStep1()">
+            <div class="space-y-4">
+              <div>
+                <label for="student-name" class="form-label">Full Name</label>
+                <input id="student-name" name="name" type="text" required class="form-control" placeholder="Enter your full name">
+              </div>
+              
+              <div>
+                <label for="student-username" class="form-label">Username</label>
+                <input id="student-username" name="username" type="text" required class="form-control" placeholder="Choose a unique username">
+              </div>
+              
+              <div>
+                <label for="student-password" class="form-label">Set Password</label>
+                <input id="student-password" name="password" type="password" required class="form-control" placeholder="Set your password">
+              </div>
+              
+              <div>
+                <label for="student-access-request" class="form-label">Access Request</label>
+                <select id="student-access-request" name="accessRequest" required class="form-control" style="height: auto;">
+                  <option value="">Select access type</option>
+                  <option value="full">Full Access - All Classes</option>
+                  <option value="standard">Standard Only - Current Class</option>
+                  <option value="trial">Trial Access - 30 Days</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <button type="submit" class="btn-primary w-full p-3 rounded-md">
+                <i class="fas fa-paper-plane mr-2"></i>
+                Send Request
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Step 2: OTP Verification -->
+        <div id="signup-step-2" class="hidden">
+          <div class="text-center mb-6">
+            <i class="fas fa-shield-alt text-4xl text-teal-custom mb-4"></i>
+            <h3 class="text-lg font-semibold text-gray-800">Verify Your Request</h3>
+            <p class="text-gray-600 text-sm mt-2">We've sent a 6-digit OTP for your registration request</p>
+          </div>
+          
+          <form id="otp-form" onsubmit="return handleOTPVerification()">
+            <div class="space-y-4">
+              <div>
+                <label for="otp-code" class="form-label">Enter OTP</label>
+                <input id="otp-code" name="otp" type="text" required class="form-control" placeholder="Enter 6-digit OTP" maxlength="6">
+              </div>
+              
+              <div class="text-center">
+                <button type="button" onclick="resendOTP()" class="text-teal-custom hover:underline text-sm">
+                  <i class="fas fa-redo mr-1"></i>
+            <div class="space-y-4">
+              <div>
+                <label for="student-medium" class="form-label">Medium</label>
+                <select id="student-medium" name="medium" required class="form-control">
+                  <option value="">Select Medium</option>
+                  <option value="marathi">Marathi</option>
+                  <option value="english">English</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="student-standard" class="form-label">Standard</label>
+                <select id="student-standard" name="standard" required class="form-control">
+                  <option value="">Select Standard</option>
+                  <option value="3">3rd Standard</option>
+                  <option value="4">4th Standard</option>
+                  <option value="5">5th Standard</option>
+                  <option value="6">6th Standard</option>
+                  <option value="7">7th Standard</option>
+                  <option value="8">8th Standard</option>
+                  <option value="9">9th Standard</option>
+                  <option value="10">10th Standard</option>
+                </select>
+              </div>
+              
+              <div>
+                <label for="student-father-name" class="form-label">Father's Name</label>
+                <input id="student-father-name" name="fatherName" type="text" required class="form-control" placeholder="Enter father's name">
+              </div>
+              
+              <div>
+                <label for="student-address" class="form-label">Address</label>
+                <textarea id="student-address" name="address" rows="3" required class="form-control" placeholder="Enter your address"></textarea>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <button type="submit" class="btn-primary w-full p-3 rounded-md">
+                <i class="fas fa-user-plus mr-2"></i>
+                Complete Registration
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        <div class="text-center mt-4">
+          <button onclick="showLogin()" class="text-teal-custom hover:underline">
+            <i class="fas fa-arrow-left mr-1"></i>
+            Back to Login
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teacher Dashboard -->
+  <div id="teacher-dashboard" class="page">
+    <div class="min-h-screen bg-gray-100">
+      <div class="flex flex-col md:flex-row">
+        <!-- Sidebar -->
+        <div class="bg-white md:w-64 w-full shadow-md p-4 md:min-h-screen">
+          <div class="text-center mb-8">
+            <h1 class="text-2xl logo-text mb-1">Shree <span>Classes</span></h1>
+            <p class="text-sm font-medium text-gray-600">(Dada)</p>
+          </div>
+          
+          <div class="mb-6">
+            <p class="text-sm text-gray-500 mb-1">Logged in as:</p>
+            <p class="font-semibold text-lg" id="teacher-name">Teacher</p>
+            <p class="text-sm text-gray-600" id="teacher-subject">Subject</p>
+          </div>
+          
+          <nav class="space-y-1">
+            <a href="javascript:void(0)" onclick="showTeacherSection('dashboard')" class="nav-item active flex items-center">
+              <i class="fas fa-tachometer-alt mr-3"></i>
+              <span>Dashboard</span>
+            </a>
+            <a href="javascript:void(0)" onclick="showTeacherSection('students')" class="nav-item flex items-center">
+              <i class="fas fa-users mr-3"></i>
+              <span>My Students</span>
+            </a>
+            <a href="javascript:void(0)" onclick="showTeacherSection('homework')" class="nav-item flex items-center">
+              <i class="fas fa-book mr-3"></i>
+              <span>Homework</span>
+            </a>
+            <a href="javascript:void(0)" onclick="showTeacherSection('announcements')" class="nav-item flex items-center">
+              <i class="fas fa-bullhorn mr-3"></i>
+              <span>Announcements</span>
+            </a>
+          </nav>
+          
+          <div class="mt-10">
+            <button onclick="logout()" class="flex items-center text-red-600 nav-item justify-center w-full">
+              <i class="fas fa-sign-out-alt mr-2"></i> Logout
+            </button>
+          </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 p-4 md:p-8">
+          <!-- Teacher Dashboard Overview -->
+          <div id="teacher-section-dashboard" class="teacher-section">
+            <div class="mb-6">
+              <h2 class="text-3xl font-bold text-gray-800">Teacher Dashboard</h2>
+              <p class="text-gray-600">Welcome back, <span id="teacher-welcome-name">Teacher</span>! Manage your classes efficiently.</p>
+              <div class="mt-2 text-sm text-gray-500">
+                <i class="fas fa-clock mr-1"></i>
+                Last updated: <span id="teacher-last-updated">Just now</span>
+              </div>
+            </div>
+            
+            <!-- Teacher Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div class="card p-4 flex items-center hover:shadow-lg transition-shadow bg-gradient-to-r from-blue-50 to-blue-100">
+                <div class="rounded-full bg-blue-600 p-3 mr-4">
+                  <i class="fas fa-users text-white text-xl"></i>
+                </div>
+                <div>
+                  <p class="text-gray-600 text-sm">My Students</p>
+                  <p class="text-2xl font-bold text-blue-600" id="teacher-students-count">0</p>
+                  <p class="text-xs text-green-600">All classes</p>
+                </div>
+              </div>
+              
+              <div class="card p-4 flex items-center hover:shadow-lg transition-shadow bg-gradient-to-r from-green-50 to-green-100">
+                <div class="rounded-full bg-green-600 p-3 mr-4">
+                  <i class="fas fa-book text-white text-xl"></i>
+                </div>
+                <div>
+                  <p class="text-gray-600 text-sm">Homework Assigned</p>
+                  <p class="text-2xl font-bold text-green-600" id="teacher-homework-count">0</p>
+                  <p class="text-xs text-gray-500">This month</p>
+                </div>
+              </div>
+              
+              <div class="card p-4 flex items-center hover:shadow-lg transition-shadow bg-gradient-to-r from-purple-50 to-purple-100">
+                <div class="rounded-full bg-purple-600 p-3 mr-4">
+                  <i class="fas fa-bullhorn text-white text-xl"></i>
+                </div>
+                <div>
+                  <p class="text-gray-600 text-sm">Announcements</p>
+                  <p class="text-2xl font-bold text-purple-600" id="teacher-announcements-count">0</p>
+                  <p class="text-xs text-green-600">1 active</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card p-6 mb-8">
+              <h3 class="font-semibold text-lg mb-4 flex items-center">
+                <i class="fas fa-bolt text-blue-500 mr-2"></i>
+                Quick Actions
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="showTeacherSection('homework')" class="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-center transition-colors">
+                  <i class="fas fa-plus-circle text-blue-600 text-2xl mb-2"></i>
+                  <p class="font-medium text-blue-800">Assign Homework</p>
+                </button>
+                <button onclick="showTeacherSection('announcements')" class="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-center transition-colors">
+                  <i class="fas fa-bullhorn text-green-600 text-2xl mb-2"></i>
+                  <p class="font-medium text-green-800">Post Announcement</p>
+                </button>
+                <button onclick="showTeacherSection('students')" class="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-center transition-colors">
+                  <i class="fas fa-user-graduate text-purple-600 text-2xl mb-2"></i>
+                  <p class="font-medium text-purple-800">View Students</p>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Students Section -->
+          <div id="teacher-section-students" class="teacher-section hidden">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-800">My Students</h2>
+              <p class="text-gray-600">Manage your students and track their progress</p>
+            </div>
+            
+            <div class="card">
+              <div class="p-4 border-b">
+                <h3 class="font-semibold">All Students</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                  <thead>
+                    <tr>
+                      <th class="py-2 px-4 border-b text-left">Name</th>
+                      <th class="py-2 px-4 border-b text-left">Standard</th>
+                      <th class="py-2 px-4 border-b text-left">Medium</th>
+                      <th class="py-2 px-4 border-b text-left">Status</th>
+                      <th class="py-2 px-4 border-b text-left">Fees</th>
+                      <th class="py-2 px-4 border-b text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="teacher-students-table">
+                    <tr><td colspan="6" class="py-4 text-center text-gray-500">Loading students...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Homework Section -->
+          <div id="teacher-section-homework" class="teacher-section hidden">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-800">Homework Management</h2>
+              <p class="text-gray-600">Assign and manage homework for your students</p>
+            </div>
+            
+            <div class="card">
+              <div class="p-4 border-b">
+                <h3 class="font-semibold">All Homework</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                  <thead>
+                    <tr>
+                      <th class="py-2 px-4 border-b text-left">Title</th>
+                      <th class="py-2 px-4 border-b text-left">Subject</th>
+                      <th class="py-2 px-4 border-b text-left">Standard</th>
+                      <th class="py-2 px-4 border-b text-left">Due Date</th>
+                      <th class="py-2 px-4 border-b text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="teacher-homework-table">
+                    <tr><td colspan="5" class="py-4 text-center text-gray-500">Loading homework...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Announcements Section -->
+          <div id="teacher-section-announcements" class="teacher-section hidden">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-800">Announcements</h2>
+              <p class="text-gray-600">Post announcements for your students</p>
+            </div>
+            
+            <div class="card">
+              <div class="p-4 border-b">
+                <h3 class="font-semibold">All Announcements</h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                  <thead>
+                    <tr>
+                      <th class="py-2 px-4 border-b text-left">Title</th>
+                      <th class="py-2 px-4 border-b text-left">Type</th>
+                      <th class="py-2 px-4 border-b text-left">Medium</th>
+                      <th class="py-2 px-4 border-b text-left">Date</th>
+                      <th class="py-2 px-4 border-b text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="teacher-announcements-table">
+                    <tr><td colspan="5" class="py-4 text-center text-gray-500">Loading announcements...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Dashboard -->
+  <div id="student-dashboard" class="page">
+    <div class="min-h-screen bg-gray-100">
+      <div class="flex flex-col md:flex-row">
+        <!-- Sidebar -->
+        <div class="bg-white md:w-64 w-full shadow-md p-4 md:min-h-screen">
+          <div class="text-center mb-8">
+            <h1 class="text-2xl logo-text mb-1">Shree <span>Classes</span></h1>
+            <p class="text-sm font-medium text-gray-600">(Dada)</p>
+          </div>
+          
+          <div class="mb-6">
+            <p class="text-sm text-gray-500 mb-1">Logged in as:</p>
+            <p class="font-semibold text-lg" id="student-name">Student Name</p>
+          </div>
+          
+          <nav class="space-y-1">
+            <a href="javascript:void(0)" class="nav-item active flex items-center">
+              <i class="fas fa-tachometer-alt mr-3"></i>
+              <span>Dashboard</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item flex items-center">
+              <i class="fas fa-bullhorn mr-3"></i>
+              <span>Announcements</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item flex items-center">
+              <i class="fas fa-book mr-3"></i>
+              <span>Homework</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item flex items-center">
+              <i class="fas fa-clipboard-check mr-3"></i>
+              <span>Weekly Tests</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item flex items-center">
+              <i class="fas fa-money-bill-wave mr-3"></i>
+              <span>Fees</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item flex items-center">
+              <i class="fas fa-user mr-3"></i>
+              <span>Profile</span>
+            </a>
+          </nav>
+          
+          <div class="mt-10">
+            <button onclick="logout()" class="flex items-center text-red-600 nav-item justify-center w-full">
+              <i class="fas fa-sign-out-alt mr-2"></i> Logout
+            </button>
+          </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 p-4 md:p-8">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Student Dashboard</h2>
+            <p class="text-gray-600">Your Academic Journey - Track Your Progress</p>
+          </div>
+          
+          <!-- Student Profile Overview -->
+          <div class="card mb-6 bg-gradient-to-r from-blue-50 to-purple-50">
+            <div class="p-6">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="rounded-full bg-blue-500 text-white w-16 h-16 flex items-center justify-center text-2xl font-bold mr-4">
+                    <span id="student-avatar">S</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-800" id="student-welcome-name">Welcome Student!</h3>
+                    <p class="text-gray-600" id="student-class-info">Class Information</p>
+                    <div class="flex items-center mt-2 space-x-4">
+                      <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">Active</span>
+                      <span class="text-sm text-gray-500">Member since: <span id="member-since">2025</span></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-sm text-gray-600">Overall Progress</div>
+                  <div class="text-2xl font-bold text-blue-600" id="overall-progress">75%</div>
+                  <div class="w-32 bg-gray-200 rounded-full h-2 mt-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: 75%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Academic Progress Overview -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="card p-4 text-center hover:shadow-lg transition-shadow">
+              <div class="rounded-full bg-green-100 w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-chart-line text-green-600"></i>
+              </div>
+              <p class="text-sm text-gray-600">Average Score</p>
+              <p class="text-xl font-bold text-green-600" id="avg-score">85%</p>
+            </div>
+            
+            <div class="card p-4 text-center hover:shadow-lg transition-shadow">
+              <div class="rounded-full bg-blue-100 w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-book text-blue-600"></i>
+              </div>
+              <p class="text-sm text-gray-600">Homework Done</p>
+              <p class="text-xl font-bold text-blue-600" id="homework-count">12/15</p>
+            </div>
+            
+            <div class="card p-4 text-center hover:shadow-lg transition-shadow">
+              <div class="rounded-full bg-purple-100 w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-calendar-check text-purple-600"></i>
+              </div>
+              <p class="text-sm text-gray-600">Attendance</p>
+              <p class="text-xl font-bold text-purple-600" id="attendance-rate">92%</p>
+            </div>
+            
+            <div class="card p-4 text-center hover:shadow-lg transition-shadow">
+              <div class="rounded-full bg-yellow-100 w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-trophy text-yellow-600"></i>
+              </div>
+              <p class="text-sm text-gray-600">Rank in Class</p>
+              <p class="text-xl font-bold text-yellow-600" id="class-rank">#3</p>
+            </div>
+          </div>
+          
+          <!-- Main Content Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column - Announcements & Notices -->
+            <div class="lg:col-span-2 space-y-6">
+              <!-- Announcements & Notices -->
+              <div class="card">
+                <div class="card-header flex items-center justify-between">
+                  <div class="flex items-center">
+                    <i class="fas fa-bullhorn mr-2"></i>
+                    Announcements & Notices
+                  </div>
+                  <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">3 New</span>
+                </div>
+                <div class="p-4">
+                  <div class="space-y-3 max-h-64 overflow-y-auto" id="announcements-list">
+                    <div class="py-3">No announcements available</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Homework & Assignments -->
+              <div class="card">
+                <div class="card-header flex items-center justify-between">
+                  <div class="flex items-center">
+                    <i class="fas fa-book mr-2"></i>
+                    Homework & Assignments
+                  </div>
+                  <span class="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">2 Due</span>
+                </div>
+                <div class="p-4">
+                  <div class="space-y-3" id="homework-list">
+                    <div class="py-3">No homework assigned</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Test Performance -->
+              <div class="card">
+                <div class="card-header flex items-center">
+                  <i class="fas fa-chart-bar mr-2"></i>
+                  Recent Test Performance
+                </div>
+                <div class="p-4">
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                      <thead>
+                        <tr>
+                          <th class="py-2 px-4 border-b text-left">Subject</th>
+                          <th class="py-2 px-4 border-b text-left">Marks</th>
+                          <th class="py-2 px-4 border-b text-left">Date</th>
+                          <th class="py-2 px-4 border-b text-left">Progress</th>
+                        </tr>
+                      </thead>
+                      <tbody id="test-marks-table">
+                        <tr>
+                          <td colspan="4" class="py-4 text-center text-gray-500">No test marks available</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right Column - Career Path & Fees -->
+            <div class="space-y-6">
+              <!-- Career Path & Goals -->
+              <div class="card">
+                <div class="card-header flex items-center">
+                  <i class="fas fa-road mr-2"></i>
+                  Your Career Path
+                </div>
+                <div class="p-4">
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between p-2 bg-blue-50 rounded">
+                      <div class="flex items-center">
+                        <i class="fas fa-check-circle text-blue-600 mr-2"></i>
+                        <span class="text-sm">Foundation Complete</span>
+                      </div>
+                      <span class="text-xs text-gray-500">Mar 2025</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-green-50 rounded">
+                      <div class="flex items-center">
+                        <i class="fas fa-spinner text-green-600 mr-2"></i>
+                        <span class="text-sm">Advanced Learning</span>
+                      </div>
+                      <span class="text-xs text-gray-500">In Progress</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div class="flex items-center">
+                        <i class="fas fa-lock text-gray-400 mr-2"></i>
+                        <span class="text-sm text-gray-500">Expert Level</span>
+                      </div>
+                      <span class="text-xs text-gray-400">Upcoming</span>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4 p-3 bg-purple-50 rounded">
+                    <p class="text-sm font-semibold text-purple-800 mb-1">Next Goal</p>
+                    <p class="text-xs text-purple-600">Complete 10 homework assignments this month</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Fees Status -->
+              <div class="card">
+                <div class="card-header flex items-center">
+                  <i class="fas fa-money-bill-wave mr-2"></i>
+                  Fees Status
+                </div>
+                <div class="p-4">
+                  <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="text-center">
+                      <p class="text-sm text-gray-600">Total Fees</p>
+                      <p class="text-lg font-bold" id="total-fees">₹0</p>
+                    </div>
+                    <div class="text-center">
+                      <p class="text-sm text-gray-600">Paid</p>
+                      <p class="text-lg font-bold text-green-600" id="paid-fees">₹0</p>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                      <span class="text-sm text-gray-600">Remaining</span>
+                      <span class="font-semibold text-red-600" id="remaining-fees">₹0</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                      <div class="bg-green-500 h-2 rounded-full" id="fees-progress-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                  
+                  <div class="text-center">
+                    <div id="fees-status" class="badge badge-warning">Pending</div>
+                  </div>
+                  
+                  <button class="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                    <i class="fas fa-download mr-2"></i>Download Receipt
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Quick Actions -->
+              <div class="card">
+                <div class="card-header flex items-center">
+                  <i class="fas fa-bolt mr-2"></i>
+                  Quick Actions
+                </div>
+                <div class="p-4 space-y-2">
+                  <button class="w-full text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded text-sm">
+                    <i class="fas fa-download mr-2"></i> Download Study Materials
+                  </button>
+                  <button class="w-full text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded text-sm">
+                    <i class="fas fa-calendar mr-2"></i> View Class Schedule
+                  </button>
+                  <button class="w-full text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded text-sm">
+                    <i class="fas fa-user-edit mr-2"></i> Update Profile
+                  </button>
+                  <button class="w-full text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded text-sm">
+                    <i class="fas fa-headset mr-2"></i> Contact Support
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="admin-dashboard" class="page">
+    <div class="admin-container">
+      <div class="admin-header">
+        <h1><i class="fas fa-tachometer-alt mr-3"></i> Admin Dashboard</h1>
+        <p>Shree Classes (Dada) - Management System</p>
+      </div>
+      
+      <div class="admin-content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Total Students</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Active Requests</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Total Revenue</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Announcements</div>
+          </div>
+        </div>
+        
+        <div class="test-section">
+          <h2><i class="fas fa-check-circle mr-2"></i> Admin Dashboard is Working!</h2>
+          <p style="font-size: 18px; margin: 20px 0;">This is a simple test to verify the admin dashboard loads correctly.</p>
+          <button class="test-button" onclick="alert('Admin dashboard is fully functional!')">
+            <i class="fas fa-rocket mr-2"></i> Test Admin Functions
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=4.0"></script>
+</body>
+</html>

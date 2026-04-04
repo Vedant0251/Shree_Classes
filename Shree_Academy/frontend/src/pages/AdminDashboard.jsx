@@ -680,9 +680,12 @@ const AdminDashboard = () => {
                         </form>
                         
                         <div style={{ marginTop: '40px' }}>
-                            <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>Currently Active Master Schedule</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <h3 style={{ fontSize: '18px' }}>Active Master Schedule</h3>
+                                <input type="date" value={scheduleDateFilter} onChange={e => setScheduleDateFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', outline: 'none' }} />
+                            </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                {lectures.length > 0 ? lectures.map((item, i) => {
+                                {lectures.filter(l => scheduleDateFilter ? new Date(l.time).toISOString().split('T')[0] === scheduleDateFilter : true).length > 0 ? lectures.filter(l => scheduleDateFilter ? new Date(l.time).toISOString().split('T')[0] === scheduleDateFilter : true).map((item, i) => {
                                     const d = new Date(item.time);
                                     const isToday = d.toDateString() === new Date().toDateString();
                                     return (

@@ -4,6 +4,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Auth from './pages/Auth';
+import CompleteProfile from './pages/CompleteProfile';
 import Courses from './pages/Courses';
 import Faculty from './pages/Faculty';
 import About from './pages/About';
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/complete-profile" element={<CompleteProfile />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/faculty" element={<Faculty />} />
         <Route path="/about" element={<About />} />

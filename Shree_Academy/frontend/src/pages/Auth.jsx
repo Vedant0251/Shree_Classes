@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
-import { auth } from '../firebase';
+import React, { useState, useEffect } from 'react';
+import { auth, db } from '../firebase';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  signOut
 } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Auth = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student'); // 'student' or 'teacher'
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  
-  const navigate = useNavigate();
+  const [successInfo, setSuccessInfo] = useState(location.state?.message || null);
+
+  useEffect(() => {
+     if (location.state?.message) {
+        setSuccessInfo(location.state.message);
+        // Clear state so it doesn't persist on refresh
+        window.history.replaceState({}, document.title);
+     }
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,25 +46,31 @@ const Auth = () => {
         // Firebase Login
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         
-        // ROLE ROUTING
-        const userRole = userCredential.user.displayName || 'student';
-        if (userRole === 'teacher') {
-            navigate('/teacher');
+        // Fetch user from db to check status
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        
+        if (userDoc.exists()) {
+            const data = userDoc.data();
+            if (data.status === 'approved') {
+                if (data.role === 'teacher') navigate('/teacher');
+                else navigate('/student');
+            } else {
+                await signOut(auth);
+                setError("Your profile is pending admin approval.");
+            }
         } else {
-            navigate('/student');
+            // Profile not completed
+            const fallbackRole = userCredential.user.displayName || 'student';
+            navigate('/complete-profile', { state: { uid: userCredential.user.uid, role: fallbackRole, email }});
         }
+
       } else {
         // Firebase Signup
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // Update user profile with Role! We use displayName as a secure hack to store roles on the client object.
         await updateProfile(userCredential.user, { displayName: role });
 
-        if (role === 'teacher') {
-            navigate('/teacher');
-        } else {
-            navigate('/student');
-        }
+        // Navigate to complete profile step
+        navigate('/complete-profile', { state: { uid: userCredential.user.uid, role, email } });
       }
     } catch (err) {
        setError(err.message.replace('Firebase: ', ''));
@@ -77,6 +95,12 @@ const Auth = () => {
              {isLogin ? 'Enter your credentials to access your portal' : 'Select your track and create your account'}
         </p>
         
+        {successInfo && (
+          <div style={{ backgroundColor: '#ECFDF5', color: '#047857', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
+            ✨ {successInfo}
+          </div>
+        )}
+
         {error && (
           <div style={{ backgroundColor: '#FEE2E2', color: '#991B1B', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
             ⚠️ {error}

@@ -10,9 +10,9 @@ const Pricing = () => {
                  
                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
                      {[ 
-                        { name: 'Foundation Track', price: '$120/mo', features: ['8th-10th Curriculum', 'Weekly Tests', 'Core Mentorship'] },
-                        { name: 'Professional Track', price: '$240/mo', features: ['JEE/NEET Preparation', 'Daily Advanced Classes', 'Personal AI Planner'], highlight: true },
-                        { name: 'Master Track', price: '$350/mo', features: ['Global Leaderboards', '1-on-1 Faculty Sessions', 'Premium Resources'] }
+                        { name: 'Foundation Track', price: '₹12,000/mo', features: ['8th-10th Curriculum', 'Weekly Tests', 'Core Mentorship'] },
+                        { name: 'Professional Track', price: '₹24,000/mo', features: ['Advanced Curriculum', 'Daily Live Classes', 'Personal Planner'], highlight: true },
+                        { name: 'Master Track', price: '₹35,000/mo', features: ['Rank Enhancement', '1-on-1 Sessions', 'Premium Resources'] }
                      ].map((plan, i) => (
                          <div key={i} className="card interactive-card" style={{ border: plan.highlight ? '2px solid var(--accent-gold)' : '1px solid var(--border-color)', position: 'relative' }}>
                              {plan.highlight && <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--accent-gold)', color: 'var(--primary-navy)', fontSize: '10px', fontWeight: 'bold', padding: '4px 12px', borderRadius: '99px' }}>MOST POPULAR</div>}

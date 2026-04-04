@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,11 +13,13 @@
       background: #f3f4f6;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
     .admin-container {
       max-width: 1400px;
       margin: 0 auto;
       padding: 20px;
     }
+
     .admin-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -24,21 +27,24 @@
       border-radius: 12px;
       margin-bottom: 30px;
       text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     }
+
     .admin-content {
       background: white;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
     .nav-sidebar {
       background: white;
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 30px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
     .nav-item {
       display: block;
       padding: 12px 16px;
@@ -49,56 +55,66 @@
       font-weight: 500;
       transition: all 0.3s ease;
     }
+
     .nav-item:hover {
       background: #f3f4f6;
       color: #667eea;
       transform: translateX(5px);
     }
+
     .nav-item.active {
       background: #667eea;
       color: white;
     }
+
     .nav-item i {
       margin-right: 8px;
       width: 16px;
     }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 20px;
       margin-bottom: 30px;
     }
+
     .stat-card {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 30px;
       border-radius: 12px;
       text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       transition: transform 0.3s ease;
     }
+
     .stat-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
     }
+
     .stat-number {
       font-size: 3rem;
       font-weight: bold;
       margin-bottom: 8px;
     }
+
     .stat-label {
       font-size: 1rem;
       opacity: 0.9;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+
     .content-section {
       background: white;
       padding: 30px;
       border-radius: 12px;
       margin-bottom: 30px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
     .section-title {
       font-size: 1.5rem;
       font-weight: bold;
@@ -107,15 +123,18 @@
       display: flex;
       align-items: center;
     }
+
     .section-title i {
       margin-right: 10px;
       color: #667eea;
     }
+
     .data-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
+
     .data-table th {
       background: #f8fafc;
       padding: 12px;
@@ -124,13 +143,16 @@
       color: #374151;
       border-bottom: 2px solid #e5e7eb;
     }
+
     .data-table td {
       padding: 12px;
       border-bottom: 1px solid #e5e7eb;
     }
+
     .data-table tr:hover {
       background: #f9fafb;
     }
+
     .btn {
       padding: 10px 20px;
       border: none;
@@ -143,66 +165,80 @@
       align-items: center;
       justify-content: center;
     }
+
     .btn-primary {
       background: #667eea;
       color: white;
     }
+
     .btn-primary:hover {
       background: #5a67d8;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
     }
+
     .btn-success {
       background: #10b981;
       color: white;
     }
+
     .btn-success:hover {
       background: #059669;
     }
+
     .btn-danger {
       background: #ef4444;
       color: white;
     }
+
     .btn-danger:hover {
       background: #dc2626;
     }
+
     .btn-warning {
       background: #f59e0b;
       color: white;
     }
+
     .btn-warning:hover {
       background: #d97706;
     }
+
     .btn i {
       margin-right: 8px;
     }
+
     .badge {
       padding: 4px 8px;
       border-radius: 12px;
       font-size: 0.75rem;
       font-weight: 500;
     }
+
     .badge-success {
       background: #10b981;
       color: white;
     }
+
     .badge-warning {
       background: #f59e0b;
       color: white;
     }
+
     .badge-danger {
       background: #ef4444;
       color: white;
     }
   </style>
 </head>
+
 <body>
   <div class="admin-container">
     <div class="admin-header">
       <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
       <p>Shree Classes (Dada) - Complete Management System</p>
     </div>
-    
+
     <div style="display: flex; gap: 30px;">
       <!-- Navigation Sidebar -->
       <div class="nav-sidebar" style="flex: 0 0 0 250px;">
@@ -234,7 +270,7 @@
           <i class="fas fa-sign-out-alt"></i> Logout
         </a>
       </div>
-      
+
       <!-- Main Content Area -->
       <div style="flex: 1;">
         <!-- Dashboard Section -->
@@ -242,7 +278,7 @@
           <div class="section-title">
             <i class="fas fa-chart-line"></i> Dashboard Overview
           </div>
-          
+
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-number" id="total-students">0</div>
@@ -265,7 +301,7 @@
               <div class="stat-label">Total Revenue</div>
             </div>
           </div>
-          
+
           <div class="content-section">
             <div class="section-title">
               <i class="fas fa-cogs"></i> Quick Actions
@@ -285,12 +321,13 @@
               </button>
             </div>
           </div>
-          
+
           <div class="content-section">
             <div class="section-title">
               <i class="fas fa-chart-bar"></i> Recent Activity
             </div>
-            <div id="recent-activity" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div id="recent-activity"
+              style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
               <div class="activity-item">
                 <div style="display: flex; align-items: center; text-sm text-gray-600 p-2 bg-blue-50 rounded">
                   <i class="fas fa-circle text-blue-500 mr-2"></i>
@@ -303,7 +340,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Other Sections (Hidden by default) -->
         <div id="students-section" class="content-section" style="display: none;">
           <div class="section-title">
@@ -314,7 +351,7 @@
             <br><br>Students management features coming soon...
           </p>
         </div>
-        
+
         <div id="requests-section" class="content-section" style="display: none;">
           <div class="section-title">
             <i class="fas fa-user-plus"></i> Student Requests
@@ -324,7 +361,7 @@
             <br><br>Student request management coming soon...
           </p>
         </div>
-        
+
         <div id="teachers-section" class="content-section" style="display: none;">
           <div class="section-title">
             <i class="fas fa-chalkboard-teacher"></i> Teacher Requests
@@ -334,7 +371,7 @@
             <br><br>Teacher request management coming soon...
           </p>
         </div>
-        
+
         <div id="announcements-section" class="content-section" style="display: none;">
           <div class="section-title">
             <i class="fas fa-bullhorn"></i> Announcements
@@ -344,7 +381,7 @@
             <br><br>Announcement management coming soon...
           </p>
         </div>
-        
+
         <div id="homework-section" class="content-section" style="display: none;">
           <div class="section-title">
             <i class="fas fa-book"></i> Homework
@@ -354,7 +391,7 @@
             <br><br>Homework management coming soon...
           </p>
         </div>
-        
+
         <div id="fees-section" class="content-section" style="display: none;">
           <div class="section-title">
             <i class="fas fa-money-bill-wave"></i> Fees Management
@@ -367,72 +404,72 @@
       </div>
     </div>
   </div>
-  
+
   <script>
     console.log('Admin dashboard loaded successfully!');
-    
+
     // Navigation functions
     function showSection(section) {
       // Hide all sections
       document.querySelectorAll('.content-section').forEach(sec => {
         sec.style.display = 'none';
       });
-      
+
       // Remove active class from all nav items
       document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
       });
-      
+
       // Show selected section
       const sectionEl = document.getElementById(section + '-section');
       if (sectionEl) {
         sectionEl.style.display = 'block';
       }
-      
+
       // Add active class to clicked nav item
       event.target.classList.add('active');
-      
+
       console.log('Showing section:', section);
     }
-    
+
     // Logout function
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
         window.location.href = 'index.html';
       }
     }
-    
+
     // Load sample data
     function loadDashboardData() {
       // Load students count
       const students = JSON.parse(localStorage.getItem('students')) || [];
       document.getElementById('total-students').textContent = students.length;
-      
+
       // Load requests count
       const requests = JSON.parse(localStorage.getItem('studentRequests')) || [];
       document.getElementById('active-requests').textContent = requests.length;
-      
+
       // Load announcements count
       const announcements = JSON.parse(localStorage.getItem('announcements')) || [];
       document.getElementById('total-announcements').textContent = announcements.length;
-      
+
       // Load homework count
       const homeworks = JSON.parse(localStorage.getItem('homeworks')) || [];
       document.getElementById('total-homework').textContent = homeworks.length;
-      
+
       // Calculate total revenue
       const totalRevenue = students.reduce((sum, student) => sum + (student.paidFees || 0), 0);
       document.getElementById('total-revenue').textContent = '₹' + totalRevenue.toLocaleString();
-      
+
       console.log('Dashboard data loaded');
     }
-    
+
     // Initialize dashboard
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       loadDashboardData();
     });
   </script>
-  
+
   <script>
     // Dialog functions
     function showAddStudentDialog() {
@@ -497,25 +534,25 @@
         </div>
       </div>
     `;
-      
+
       document.body.appendChild(dialog);
     }
-    
+
     function confirmAddStudent() {
       const name = document.getElementById('new-student-name').value.trim();
       const username = document.getElementById('new-student-username').value.trim();
       const medium = document.getElementById('new-student-medium').value;
       const standard = document.getElementById('new-student-standard').value;
       const fees = document.getElementById('new-student-fees').value;
-      
+
       if (!name || !username || !medium || !standard || !fees) {
         alert('Please fill in all student details');
         return;
       }
-      
+
       // Generate random password
       const randomPassword = generateRandomPassword();
-      
+
       // Create new student
       const students = JSON.parse(localStorage.getItem('students')) || [];
       const newStudent = {
@@ -530,28 +567,28 @@
         registrationDate: new Date().toISOString().split('T')[0],
         status: 'approved'
       };
-      
+
       // Add to students array
       students.push(newStudent);
       localStorage.setItem('students', JSON.stringify(students));
-      
+
       // Remove dialog
       document.body.removeChild(document.body.lastChild);
-      
+
       // Show success message
       alert(`Student added successfully!\n\nName: ${name}\nUsername: ${username}\nGenerated Password: ${randomPassword}\n\nPlease share these credentials with the student.`);
-      
+
       // Refresh data
       loadDashboardData();
     }
-    
+
     function cancelAddStudent() {
       const dialog = document.body.lastChild;
       if (dialog && dialog.tagName === 'DIV') {
         document.body.removeChild(dialog);
       }
     }
-    
+
     function showAddAnnouncementDialog() {
       const dialog = document.createElement('div');
       dialog.innerHTML = `
@@ -605,21 +642,21 @@
         </div>
       </div>
     `;
-      
+
       document.body.appendChild(dialog);
     }
-    
+
     function confirmAddAnnouncement() {
       const title = document.getElementById('new-announcement-title').value.trim();
       const content = document.getElementById('new-announcement-content').value.trim();
       const type = document.getElementById('new-announcement-type').value;
       const priority = document.getElementById('new-announcement-priority').value;
-      
+
       if (!title || !content) {
         alert('Please enter both title and content for the announcement');
         return;
       }
-      
+
       // Create new announcement
       const announcements = JSON.parse(localStorage.getItem('announcements')) || [];
       const newAnnouncement = {
@@ -631,55 +668,55 @@
         date: new Date().toISOString().split('T')[0],
         status: 'active'
       };
-      
+
       // Add to announcements array
       announcements.push(newAnnouncement);
       localStorage.setItem('announcements', JSON.stringify(announcements));
-      
+
       // Remove dialog
       document.body.removeChild(document.body.lastChild);
-      
+
       // Show success message
       alert('Announcement created successfully!');
-      
+
       // Refresh data
       loadDashboardData();
     }
-    
+
     function cancelAddAnnouncement() {
       const dialog = document.body.lastChild;
       if (dialog && dialog.tagName === 'DIV') {
         document.body.removeChild(dialog);
       }
     }
-    
+
     function showAddHomeworkDialog() {
       alert('Homework assignment feature coming soon!');
     }
-    
+
     function exportAllData() {
       const students = JSON.parse(localStorage.getItem('students')) || [];
       const requests = JSON.parse(localStorage.getItem('studentRequests')) || [];
       const announcements = JSON.parse(localStorage.getItem('announcements')) || [];
       const homeworks = JSON.parse(localStorage.getItem('homeworks')) || [];
-      
+
       const allData = {
         students: students,
         requests: requests,
         announcements: announcements,
         homeworks: homeworks
       };
-      
+
       const dataStr = JSON.stringify(allData, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
       const exportFileDefaultName = 'shree_classes_data.json';
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
     }
-    
+
     // Generate random password function
     function generateRandomPassword() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -689,29 +726,29 @@
       }
       return password;
     }
-    
+
     // Initialize dashboard
     function loadDashboardData() {
       // Load students count
       const students = JSON.parse(localStorage.getItem('students')) || [];
       document.getElementById('total-students').textContent = students.length;
-      
+
       // Load requests count
       const requests = JSON.parse(localStorage.getItem('studentRequests')) || [];
       document.getElementById('active-requests').textContent = requests.length;
-      
+
       // Load announcements count
       const announcements = JSON.parse(localStorage.getItem('announcements')) || [];
       document.getElementById('total-announcements').textContent = announcements.length;
-      
+
       // Load homework count
       const homeworks = JSON.parse(localStorage.getItem('homeworks')) || [];
       document.getElementById('total-homework').textContent = homeworks.length;
-      
+
       // Calculate total revenue
       const totalRevenue = students.reduce((sum, student) => sum + (student.paidFees || 0), 0);
       document.getElementById('total-revenue').textContent = '₹' + totalRevenue.toLocaleString();
-      
+
       // Add recent activity
       const recentActivity = document.getElementById('recent-activity');
       recentActivity.innerHTML = `
@@ -732,14 +769,15 @@
             </div>
         </div>
       `;
-      
+
       console.log('Dashboard data loaded successfully');
     }
-    
+
     // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       loadDashboardData();
     });
   </script>
 </body>
+
 </html>

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Book, Calendar, TrendingUp, Folder, Settings, Bell, User, Play, Star, LogOut, LayoutDashboard, FileText, CreditCard } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Book, Calendar, Folder, Settings, Bell, User, Star, LogOut, LayoutDashboard, FileText, CreditCard, ScrollText, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { auth, db, storage } from '../firebase';
-import { collection, query, orderBy, getDocs, limit, where, getDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, limit, where, getDoc, doc, addDoc, serverTimestamp, updateDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const StudentDashboard = () => {
@@ -11,14 +11,21 @@ const StudentDashboard = () => {
     const [resources, setResources] = useState([]);
     const [notices, setNotices] = useState([]);
     const [payments, setPayments] = useState([]);
+    const [assignedHomework, setAssignedHomework] = useState([]);
     const [userProfile, setUserProfile] = useState(null);
 
     const [editName, setEditName] = useState('');
     const [editPhone, setEditPhone] = useState('');
 
     const [payAmount, setPayAmount] = useState('');
-    const [payReceipt, setPayReceipt] = useState(null);
     const [uploading, setUploading] = useState(false);
+
+    const [reportCardUpload, setReportCardUpload] = useState(null);
+    const [homeworkSubmissionsMap, setHomeworkSubmissionsMap] = useState({});
+    const [pdfUploading, setPdfUploading] = useState(null);
+    const reportCardFileRef = useRef(null);
+    const assignmentHwFileRef = useRef(null);
+    const pendingHwAssignmentIdRef = useRef(null);
 
     const userName = auth.currentUser?.displayName || 'Student';
 
@@ -71,13 +78,139 @@ const StudentDashboard = () => {
                 pData.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
                 setPayments(pData);
             }
+
+            let snapHw = await getDocs(collection(db, 'homeworkAssignments'));
+            let hwData = [];
+            snapHw.forEach((d) => hwData.push({ id: d.id, ...d.data() }));
+            const uid = auth.currentUser?.uid;
+            if (uid) {
+                hwData = hwData.filter((hw) => {
+                    if (hw.targetType === 'class') {
+                        if (!userProfile?.courseMedium || !userProfile?.courseClass) return false;
+                        return (hw.courseMedium === userProfile.courseMedium || hw.courseMedium === 'General')
+                            && (hw.courseClass === userProfile.courseClass || hw.courseClass === 'General');
+                    }
+                    return Array.isArray(hw.assignedStudentIds) && hw.assignedStudentIds.includes(uid);
+                });
+            } else {
+                hwData = [];
+            }
+            hwData.sort((a, b) => {
+                const da = a.dueDate?.toDate ? a.dueDate.toDate() : new Date(0);
+                const db = b.dueDate?.toDate ? b.dueDate.toDate() : new Date(0);
+                return da - db;
+            });
+            setAssignedHomework(hwData);
+
+            if (uid) {
+                const subSnap = await getDocs(query(collection(db, 'homeworkSubmissions'), where('studentId', '==', uid)));
+                const subMap = {};
+                subSnap.forEach((d) => {
+                    const data = d.data();
+                    if (data.homeworkAssignmentId) subMap[data.homeworkAssignmentId] = data;
+                });
+                setHomeworkSubmissionsMap(subMap);
+            } else {
+                setHomeworkSubmissionsMap({});
+            }
         } catch (error) {
             console.error("Error fetching content:", error);
         }
     };
 
+    const fetchStudentUploads = async () => {
+        if (!auth.currentUser) return;
+        const uid = auth.currentUser.uid;
+        try {
+            const rSnap = await getDoc(doc(db, 'studentUploads', `${uid}_reportCard`));
+            setReportCardUpload(rSnap.exists() ? rSnap.data() : null);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleReportCardPdfChange = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file || !auth.currentUser) return;
+        const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+        if (!isPdf) {
+            alert('Please choose a PDF file only (.pdf).');
+            return;
+        }
+        setPdfUploading('reportCard');
+        try {
+            const uid = auth.currentUser.uid;
+            const storagePath = `student-uploads/${uid}/report-card.pdf`;
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, file, { contentType: 'application/pdf' });
+            const fileUrl = await getDownloadURL(storageRef);
+            const docId = `${uid}_reportCard`;
+            await setDoc(doc(db, 'studentUploads', docId), {
+                studentId: uid,
+                kind: 'reportCard',
+                fileName: file.name,
+                fileUrl,
+                uploadedAt: serverTimestamp(),
+            });
+            await fetchStudentUploads();
+            alert('Report card PDF uploaded successfully.');
+        } catch (err) {
+            console.error(err);
+            alert('Upload failed. Check your connection and try again.');
+        } finally {
+            setPdfUploading(null);
+        }
+    };
+
+    const openAssignmentHomeworkUpload = (assignmentId) => {
+        pendingHwAssignmentIdRef.current = assignmentId;
+        assignmentHwFileRef.current?.click();
+    };
+
+    const handleAssignmentHomeworkChange = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        const assignmentId = pendingHwAssignmentIdRef.current;
+        pendingHwAssignmentIdRef.current = null;
+        if (!file || !auth.currentUser || !assignmentId) return;
+        const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+        if (!isPdf) {
+            alert('Please choose a PDF file only (.pdf).');
+            return;
+        }
+        const uploadKey = `hwassign:${assignmentId}`;
+        setPdfUploading(uploadKey);
+        try {
+            const uid = auth.currentUser.uid;
+            const storagePath = `student-uploads/${uid}/by-assignment/${assignmentId}.pdf`;
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, file, { contentType: 'application/pdf' });
+            const fileUrl = await getDownloadURL(storageRef);
+            const docId = `${uid}_${assignmentId}`;
+            await setDoc(doc(db, 'homeworkSubmissions', docId), {
+                studentId: uid,
+                homeworkAssignmentId: assignmentId,
+                fileName: file.name,
+                fileUrl,
+                uploadedAt: serverTimestamp(),
+            });
+            const saved = await getDoc(doc(db, 'homeworkSubmissions', docId));
+            if (saved.exists()) {
+                setHomeworkSubmissionsMap((prev) => ({ ...prev, [assignmentId]: saved.data() }));
+            }
+            alert('Your homework PDF was uploaded for this assignment.');
+        } catch (err) {
+            console.error(err);
+            alert('Upload failed. Check your connection and try again.');
+        } finally {
+            setPdfUploading(null);
+        }
+    };
+
     useEffect(() => {
         fetchUserData();
+        fetchStudentUploads();
     }, []);
 
     useEffect(() => {
@@ -139,7 +272,7 @@ const StudentDashboard = () => {
                 </div>
 
                 <div className="sidebar-nav">
-                    {['Dashboard', 'Notices', 'My Courses', 'Schedule', 'Payments & Fees', 'Resources', 'Settings'].map(tab => (
+                    {['Dashboard', 'Notices', 'My Courses', 'Schedule', 'Payments & Fees', 'Resources', 'My Homework', 'Report Card Upload', 'Settings'].map(tab => (
                         <div
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -152,6 +285,8 @@ const StudentDashboard = () => {
                             {tab === 'Schedule' && <Calendar size={18} />}
                             {tab === 'Payments & Fees' && <CreditCard size={18} />}
                             {tab === 'Resources' && <Folder size={18} />}
+                            {tab === 'My Homework' && <ClipboardList size={18} />}
+                            {tab === 'Report Card Upload' && <ScrollText size={18} />}
                             {tab === 'Settings' && <Settings size={18} />}
                             {tab}
 
@@ -159,6 +294,7 @@ const StudentDashboard = () => {
                             {tab === 'Notices' && notices.length > 0 && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
                             {tab === 'Schedule' && lectures.length > 0 && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
                             {tab === 'Resources' && resources.length > 0 && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
+                            {tab === 'My Homework' && assignedHomework.length > 0 && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
                             {tab === 'Payments & Fees' && userProfile && ((userProfile.totalFees || 0) > (userProfile.paidFees || 0)) && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
                         </div>
                     ))}
@@ -234,6 +370,36 @@ const StudentDashboard = () => {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+
+                            <div className="card">
+                                <div className="flex justify-between items-center" style={{ marginBottom: '16px' }}>
+                                    <h3 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <ClipboardList size={20} color="var(--accent-gold)" /> Homework from faculty
+                                    </h3>
+                                    {assignedHomework.length > 0 && (
+                                        <button type="button" onClick={() => setActiveTab('My Homework')} className="btn btn-outline" style={{ padding: '6px 14px', fontSize: '12px' }}>View all</button>
+                                    )}
+                                </div>
+                                {assignedHomework.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {assignedHomework.slice(0, 3).map((hw) => {
+                                            const due = hw.dueDate?.toDate ? hw.dueDate.toDate() : null;
+                                            const overdue = due && due < new Date(new Date().setHours(0, 0, 0, 0));
+                                            return (
+                                                <div key={hw.id} style={{ padding: '14px 16px', borderRadius: '10px', backgroundColor: '#F8FAFC', border: overdue ? '1px solid #F87171' : '1px solid var(--border-color)' }}>
+                                                    <div style={{ fontSize: '11px', color: 'var(--text-light)', fontWeight: '600', marginBottom: '4px' }}>{hw.subject}{due ? ` • Due ${due.toLocaleString()}` : ''}</div>
+                                                    <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--primary-navy)' }}>{hw.title}</div>
+                                                    {hw.attachmentUrl && (
+                                                        <a href={hw.attachmentUrl} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: 'var(--primary-navy)', marginTop: '8px', display: 'inline-block' }}>Attachment</a>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p style={{ color: 'var(--text-light)', fontSize: '13px' }}>No assignments right now. Check back after your teacher posts homework.</p>
+                                )}
                             </div>
                         </div>
 
@@ -413,6 +579,136 @@ const StudentDashboard = () => {
                                 <Folder size={32} color="#CBD5E1" style={{ margin: '0 auto 16px' }} />
                                 <p>No resources or notes have been uploaded for your profile class yet.</p>
                             </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'My Homework' && (
+                    <div className="card">
+                        <h2 style={{ fontSize: '20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <ClipboardList size={24} color="var(--accent-gold)" /> My homework
+                        </h2>
+                        <input
+                            ref={assignmentHwFileRef}
+                            type="file"
+                            accept=".pdf,application/pdf"
+                            style={{ display: 'none' }}
+                            onChange={handleAssignmentHomeworkChange}
+                        />
+                        <p style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '24px', lineHeight: 1.6 }}>
+                            Assignments from your teachers, ordered by due date. Upload your completed PDF for each task using the panel on the right.
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {assignedHomework.length > 0 ? assignedHomework.map((hw) => {
+                                const due = hw.dueDate?.toDate ? hw.dueDate.toDate() : null;
+                                const overdue = due && due < new Date();
+                                const submission = homeworkSubmissionsMap[hw.id];
+                                const uploadKey = `hwassign:${hw.id}`;
+                                const isUploadingThis = pdfUploading === uploadKey;
+                                return (
+                                    <div key={hw.id} style={{ padding: '24px', borderRadius: '12px', backgroundColor: '#F8FAFC', border: '1px solid var(--border-color)', borderLeft: `4px solid ${overdue ? '#EF4444' : 'var(--accent-gold)'}` }}>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'stretch', justifyContent: 'space-between' }}>
+                                            <div style={{ flex: '1', minWidth: '240px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '10px' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '12px', color: 'var(--text-light)', fontWeight: '600' }}>
+                                                            {hw.subject} • Due {due ? due.toLocaleString() : '—'}
+                                                        </div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--primary-navy)', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '4px' }}>
+                                                            Assigned by {hw.teacherName || 'Faculty'}
+                                                        </div>
+                                                    </div>
+                                                    {overdue && <span className="badge" style={{ backgroundColor: '#FEE2E2', color: '#991B1B' }}>Past due</span>}
+                                                </div>
+                                                <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary-navy)', marginBottom: '8px' }}>{hw.title}</h4>
+                                                <p style={{ fontSize: '15px', color: '#475569', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: hw.attachmentUrl ? '12px' : 0 }}>{hw.description}</p>
+                                                {hw.attachmentUrl && (
+                                                    <a href={hw.attachmentUrl} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ padding: '8px 16px', marginTop: '8px', display: 'inline-block', textDecoration: 'none' }}>Open attachment</a>
+                                                )}
+                                            </div>
+                                            <div style={{ width: '100%', maxWidth: '280px', flexShrink: 0, padding: '16px', borderRadius: '10px', backgroundColor: '#fff', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--primary-navy)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Your submission</div>
+                                                {submission ? (
+                                                    <>
+                                                        <div style={{ fontSize: '13px', fontWeight: '600', wordBreak: 'break-word' }}>{submission.fileName}</div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>
+                                                            {submission.uploadedAt?.toDate ? new Date(submission.uploadedAt.toDate()).toLocaleString() : 'Uploaded'}
+                                                        </div>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                                                            <a href={submission.fileUrl} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ padding: '8px 12px', fontSize: '13px', textDecoration: 'none', textAlign: 'center' }}>Open PDF</a>
+                                                            <button type="button" className="btn btn-outline" style={{ padding: '8px 12px', fontSize: '13px' }} disabled={isUploadingThis} onClick={() => openAssignmentHomeworkUpload(hw.id)}>
+                                                                {isUploadingThis ? 'Uploading…' : 'Replace PDF'}
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p style={{ fontSize: '12px', color: 'var(--text-light)', lineHeight: 1.5, margin: 0 }}>Submit one PDF for this assignment.</p>
+                                                        <button type="button" className="btn btn-primary" style={{ padding: '10px 14px', fontSize: '13px', width: '100%' }} disabled={isUploadingThis} onClick={() => openAssignmentHomeworkUpload(hw.id)}>
+                                                            {isUploadingThis ? 'Uploading…' : 'Upload homework PDF'}
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }) : (
+                                <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-light)', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                                    <ClipboardList size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
+                                    <p style={{ fontSize: '16px' }}>You have no homework assigned yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'Report Card Upload' && (
+                    <div className="card">
+                        <h2 style={{ fontSize: '20px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <ScrollText size={24} color="var(--accent-gold)" /> Report Card Upload
+                        </h2>
+                        <p style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '24px', lineHeight: 1.6 }}>
+                            Upload your exam result or report card as a PDF. Uploading again replaces the previous file.
+                        </p>
+                        <input
+                            ref={reportCardFileRef}
+                            type="file"
+                            accept=".pdf,application/pdf"
+                            style={{ display: 'none' }}
+                            onChange={handleReportCardPdfChange}
+                        />
+                        {reportCardUpload ? (
+                            <div style={{ padding: '20px', borderRadius: '12px', backgroundColor: '#F8FAFC', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
+                                    <div style={{ width: '48px', height: '48px', backgroundColor: '#EEF2FF', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <FileText size={22} color="var(--primary-navy)" />
+                                    </div>
+                                    <div style={{ flex: '1', minWidth: '200px' }}>
+                                        <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '6px', wordBreak: 'break-word' }}>{reportCardUpload.fileName}</div>
+                                        <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>
+                                            Uploaded {reportCardUpload.uploadedAt?.toDate ? new Date(reportCardUpload.uploadedAt.toDate()).toLocaleString() : '—'}
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '14px' }}>
+                                            <a href={reportCardUpload.fileUrl} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ padding: '8px 16px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Open PDF</a>
+                                            <button type="button" className="btn btn-outline" style={{ padding: '8px 16px' }} disabled={pdfUploading === 'reportCard'} onClick={() => reportCardFileRef.current?.click()}>
+                                                {pdfUploading === 'reportCard' ? 'Uploading…' : 'Replace PDF'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-light)', border: '1px dashed var(--border-color)', borderRadius: '12px', marginBottom: '20px' }}>
+                                <ScrollText size={36} color="#CBD5E1" style={{ margin: '0 auto 16px' }} />
+                                <p style={{ fontSize: '15px', marginBottom: '8px' }}>No report card PDF uploaded yet.</p>
+                                <p style={{ fontSize: '13px' }}>PDF files only.</p>
+                            </div>
+                        )}
+                        {!reportCardUpload && (
+                            <button type="button" className="btn btn-primary" style={{ padding: '12px 24px' }} disabled={pdfUploading === 'reportCard'} onClick={() => reportCardFileRef.current?.click()}>
+                                {pdfUploading === 'reportCard' ? 'Uploading…' : 'Upload report card PDF'}
+                            </button>
                         )}
                     </div>
                 )}

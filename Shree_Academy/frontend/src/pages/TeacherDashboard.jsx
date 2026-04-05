@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Calendar, Users, FileText, BookOpen, Settings, Bell, Search, Upload, TrendingUp, Star, BarChart, LogOut, File, Trash2, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { LayoutDashboard, Calendar, BookOpen, Settings, Bell, Search, Upload, TrendingUp, BarChart, LogOut, Trash2, ClipboardList } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { db, storage, auth } from '../firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, deleteDoc, doc, getDoc, updateDoc, where, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const TeacherDashboard = () => {
+    const navigate = useNavigate();
+    const [accessOk, setAccessOk] = useState(false);
     const [activeTab, setActiveTab] = useState('Dashboard');
     const [scheduleSubject, setScheduleSubject] = useState('');
     const [scheduleTime, setScheduleTime] = useState('');
@@ -32,7 +34,52 @@ const TeacherDashboard = () => {
     const [editPhone, setEditPhone] = useState('');
     const [scheduleDateFilter, setScheduleDateFilter] = useState('');
 
+    const [hwTitle, setHwTitle] = useState('');
+    const [hwDescription, setHwDescription] = useState('');
+    const [hwSubject, setHwSubject] = useState('');
+    const [hwDueDate, setHwDueDate] = useState('');
+    const [hwFile, setHwFile] = useState(null);
+    const [hwTargetType, setHwTargetType] = useState('class');
+    const [hwMedium, setHwMedium] = useState('English');
+    const [hwClass, setHwClass] = useState('10th');
+    const [hwSelectedStudentIds, setHwSelectedStudentIds] = useState([]);
+    const [hwStudentSearch, setHwStudentSearch] = useState('');
+    const [studentsList, setStudentsList] = useState([]);
+    const [homeworkAssignments, setHomeworkAssignments] = useState([]);
+    const [hwSubmitting, setHwSubmitting] = useState(false);
+
     const userName = auth.currentUser?.displayName || 'Faculty Account';
+
+    const filteredStudentsForPicker = useMemo(() => {
+        const q = hwStudentSearch.trim().toLowerCase();
+        if (!q) return studentsList;
+        return studentsList.filter((s) => {
+            const label = `${s.name || ''} ${s.email || ''} ${s.courseMedium || ''} ${s.courseClass || ''}`.toLowerCase();
+            return label.includes(q);
+        });
+    }, [studentsList, hwStudentSearch]);
+
+    const loadTeacherAccess = async () => {
+        if (!auth.currentUser) {
+            navigate('/auth', { replace: true });
+            return;
+        }
+        try {
+            const d = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            const data = d.data();
+            if (!d.exists() || data?.role !== 'teacher' || data?.status !== 'approved') {
+                navigate('/auth', { replace: true });
+                return;
+            }
+            setUserProfile({ id: d.id, ...data });
+            setEditName(data.name || '');
+            setEditPhone(data.phone || '');
+            setAccessOk(true);
+        } catch (e) {
+            console.error(e);
+            navigate('/auth', { replace: true });
+        }
+    };
 
     const fetchUserData = async () => {
         if (auth.currentUser) {
@@ -45,6 +92,43 @@ const TeacherDashboard = () => {
                     setEditPhone(data.phone || '');
                 }
             } catch (e) { console.error(e); }
+        }
+    };
+
+    const fetchStudentsForHomework = async () => {
+        try {
+            const snap = await getDocs(collection(db, 'users'));
+            const list = [];
+            snap.forEach((d) => {
+                const u = d.data();
+                if (u.role === 'student' && u.status === 'approved') {
+                    list.push({
+                        id: d.id,
+                        name: u.name || u.email || 'Student',
+                        email: u.email || '',
+                        courseMedium: u.courseMedium || '',
+                        courseClass: u.courseClass || '',
+                    });
+                }
+            });
+            list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            setStudentsList(list);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const fetchTeacherHomework = async () => {
+        if (!auth.currentUser) return;
+        try {
+            const qHw = query(collection(db, 'homeworkAssignments'), where('teacherId', '==', auth.currentUser.uid));
+            const snap = await getDocs(qHw);
+            const rows = [];
+            snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+            rows.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+            setHomeworkAssignments(rows);
+        } catch (e) {
+            console.error(e);
         }
     };
 
@@ -73,11 +157,102 @@ const TeacherDashboard = () => {
     };
 
     useEffect(() => {
-        fetchUserData();
+        loadTeacherAccess();
+    }, [navigate]);
+
+    useEffect(() => {
+        if (!accessOk) return;
         if (activeTab === 'Dashboard' || activeTab === 'Schedule' || activeTab === 'Resources' || activeTab === 'Settings' || activeTab === 'Notices') {
             fetchData();
         }
-    }, [activeTab]);
+        if (activeTab === 'Homework') {
+            fetchStudentsForHomework();
+            fetchTeacherHomework();
+        }
+    }, [activeTab, accessOk]);
+
+    const toggleHwStudent = (studentId) => {
+        setHwSelectedStudentIds((prev) =>
+            prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
+        );
+    };
+
+    const handleAssignHomework = async (e) => {
+        e.preventDefault();
+        if (!auth.currentUser) return;
+        if (!hwDueDate) {
+            alert('Please set a due date.');
+            return;
+        }
+        if (hwTargetType === 'students' && hwSelectedStudentIds.length === 0) {
+            alert('Select at least one student, or switch to “Class / group”.');
+            return;
+        }
+        setHwSubmitting(true);
+        try {
+            let attachmentUrl = null;
+            let attachmentPath = null;
+            let attachmentName = null;
+            if (hwFile) {
+                const safeName = hwFile.name.replace(/[^\w.-]+/g, '_');
+                const path = `homework-attachments/${auth.currentUser.uid}/${Date.now()}_${safeName}`;
+                const fileRef = ref(storage, path);
+                await uploadBytes(fileRef, hwFile);
+                attachmentUrl = await getDownloadURL(fileRef);
+                attachmentPath = fileRef.fullPath;
+                attachmentName = hwFile.name;
+            }
+
+            await addDoc(collection(db, 'homeworkAssignments'), {
+                title: hwTitle.trim(),
+                description: hwDescription.trim(),
+                subject: hwSubject.trim(),
+                dueDate: Timestamp.fromDate(new Date(hwDueDate)),
+                teacherId: auth.currentUser.uid,
+                teacherName: userName,
+                targetType: hwTargetType,
+                courseMedium: hwTargetType === 'class' ? hwMedium : null,
+                courseClass: hwTargetType === 'class' ? hwClass : null,
+                assignedStudentIds: hwTargetType === 'students' ? hwSelectedStudentIds : [],
+                attachmentUrl,
+                attachmentPath,
+                attachmentName,
+                createdAt: serverTimestamp(),
+            });
+
+            alert('Homework assigned successfully.');
+            setHwTitle('');
+            setHwDescription('');
+            setHwSubject('');
+            setHwDueDate('');
+            setHwFile(null);
+            setHwSelectedStudentIds([]);
+            fetchTeacherHomework();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to assign homework.');
+        } finally {
+            setHwSubmitting(false);
+        }
+    };
+
+    const handleDeleteHomework = async (row) => {
+        if (!window.confirm('Remove this homework assignment? Students will no longer see it.')) return;
+        try {
+            await deleteDoc(doc(db, 'homeworkAssignments', row.id));
+            if (row.attachmentPath) {
+                try {
+                    await deleteObject(ref(storage, row.attachmentPath));
+                } catch (storageErr) {
+                    console.warn(storageErr);
+                }
+            }
+            fetchTeacherHomework();
+        } catch (e) {
+            console.error(e);
+            alert('Could not delete assignment.');
+        }
+    };
 
     const handleAddNotice = async (e) => {
         e.preventDefault();
@@ -197,6 +372,14 @@ const TeacherDashboard = () => {
         }
     };
 
+    if (!accessOk) {
+        return (
+            <div className="dashboard-layout" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p style={{ color: 'var(--text-light)', fontSize: '15px' }}>Verifying faculty access…</p>
+            </div>
+        );
+    }
+
     return (
         <div className="dashboard-layout">
             {/* Sidebar */}
@@ -220,7 +403,7 @@ const TeacherDashboard = () => {
                 </div>
 
                 <div className="sidebar-nav">
-                    {['Dashboard', 'Notices', 'Schedule', 'Resources', 'Performance', 'Settings'].map(tab => (
+                    {['Dashboard', 'Notices', 'Schedule', 'Resources', 'Homework', 'Performance', 'Settings'].map(tab => (
                         <div 
                             key={tab} 
                             onClick={() => setActiveTab(tab)} 
@@ -232,6 +415,7 @@ const TeacherDashboard = () => {
                             {tab === 'Schedule' && <Calendar size={18} />}
                             {tab === 'Performance' && <BarChart size={18} />}
                             {tab === 'Resources' && <BookOpen size={18} />}
+                            {tab === 'Homework' && <ClipboardList size={18} />}
                             {tab === 'Settings' && <Settings size={18} />}
                             {tab}
                             {/* Dynamic Red Dot Indicators */}
@@ -537,6 +721,147 @@ const TeacherDashboard = () => {
                                     </div>
                                 )) : (
                                     <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-light)' }}>No active resources uploaded.</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'Homework' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
+                        <div className="card">
+                            <h2 style={{ fontSize: '20px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <ClipboardList size={22} color="var(--accent-gold)" /> Assign homework
+                            </h2>
+                            <p style={{ color: 'var(--text-light)', fontSize: '13px', marginBottom: '24px', lineHeight: 1.5 }}>
+                                Create tasks for a class group or hand-pick students. Optional PDF or document attachment.
+                            </p>
+                            <form onSubmit={handleAssignHomework} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Title</label>
+                                    <input required type="text" value={hwTitle} onChange={(e) => setHwTitle(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none' }} placeholder="E.g., Algebra problem set" />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Description</label>
+                                    <textarea required value={hwDescription} onChange={(e) => setHwDescription(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none', minHeight: '100px' }} placeholder="Instructions, chapter references, etc." />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Subject</label>
+                                    <input required type="text" value={hwSubject} onChange={(e) => setHwSubject(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none' }} placeholder="E.g., Mathematics" />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Due date & time</label>
+                                    <input required type="datetime-local" value={hwDueDate} onChange={(e) => setHwDueDate(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Supporting file (optional)</label>
+                                    <input type="file" accept=".pdf,.doc,.docx,application/pdf" onChange={(e) => setHwFile(e.target.files?.[0] || null)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px dashed var(--border-color)', fontSize: '14px', outline: 'none', backgroundColor: '#F8FAFC', cursor: 'pointer' }} />
+                                    <p style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '6px' }}>PDF recommended; Word documents also accepted.</p>
+                                </div>
+
+                                <div style={{ padding: '16px', borderRadius: '10px', backgroundColor: '#F8FAFC', border: '1px solid var(--border-color)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '12px' }}>Who should receive this?</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px' }}>
+                                            <input type="radio" name="hwTarget" checked={hwTargetType === 'class'} onChange={() => setHwTargetType('class')} />
+                                            Class / group (medium + standard)
+                                        </label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px' }}>
+                                            <input type="radio" name="hwTarget" checked={hwTargetType === 'students'} onChange={() => setHwTargetType('students')} />
+                                            Specific students
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {hwTargetType === 'class' && (
+                                    <div style={{ display: 'flex', gap: '16px' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Medium</label>
+                                            <select value={hwMedium} onChange={(e) => setHwMedium(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                                                <option value="English">English</option>
+                                                <option value="Marathi">Marathi</option>
+                                                <option value="Foundation">Foundation</option>
+                                                <option value="General">General / All</option>
+                                            </select>
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Standard</label>
+                                            <select value={hwClass} onChange={(e) => setHwClass(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                                                <option value="3rd">3rd Standard</option>
+                                                <option value="4th">4th Standard</option>
+                                                <option value="5th">5th Standard</option>
+                                                <option value="6th">6th Standard</option>
+                                                <option value="7th">7th Standard</option>
+                                                <option value="8th">8th Standard</option>
+                                                <option value="9th">9th Standard</option>
+                                                <option value="10th">10th Standard</option>
+                                                <option value="General">General / All</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {hwTargetType === 'students' && (
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Search students</label>
+                                        <div style={{ position: 'relative', marginBottom: '10px' }}>
+                                            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+                                            <input type="text" value={hwStudentSearch} onChange={(e) => setHwStudentSearch(e.target.value)} placeholder="Name, email, class…" style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none' }} />
+                                        </div>
+                                        <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: '#fff' }}>
+                                            {filteredStudentsForPicker.length > 0 ? filteredStudentsForPicker.map((s) => (
+                                                <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderBottom: '1px solid var(--border-color)', cursor: 'pointer', fontSize: '13px' }}>
+                                                    <input type="checkbox" checked={hwSelectedStudentIds.includes(s.id)} onChange={() => toggleHwStudent(s.id)} />
+                                                    <span style={{ flex: 1 }}>
+                                                        <span style={{ fontWeight: '600' }}>{s.name}</span>
+                                                        <span style={{ color: 'var(--text-light)', display: 'block', fontSize: '11px' }}>{s.courseMedium} • {s.courseClass}</span>
+                                                    </span>
+                                                </label>
+                                            )) : (
+                                                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-light)', fontSize: '13px' }}>No approved students found.</div>
+                                            )}
+                                        </div>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '8px' }}>{hwSelectedStudentIds.length} student(s) selected</p>
+                                    </div>
+                                )}
+
+                                <button disabled={hwSubmitting} type="submit" className="btn btn-primary" style={{ padding: '14px' }}>
+                                    {hwSubmitting ? 'Assigning…' : 'Assign homework'}
+                                </button>
+                            </form>
+                        </div>
+
+                        <div className="card">
+                            <h2 style={{ fontSize: '20px', marginBottom: '24px' }}>Your assignments</h2>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                {homeworkAssignments.length > 0 ? homeworkAssignments.map((hw) => {
+                                    const due = hw.dueDate?.toDate ? hw.dueDate.toDate() : null;
+                                    return (
+                                        <div key={hw.id} style={{ padding: '16px', borderRadius: '12px', backgroundColor: '#F8FAFC', border: '1px solid var(--border-color)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontSize: '11px', color: 'var(--text-light)', fontWeight: '600', marginBottom: '4px' }}>
+                                                        {hw.subject} • Due {due ? due.toLocaleString() : '—'}
+                                                    </div>
+                                                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--primary-navy)', marginBottom: '6px' }}>{hw.title}</h4>
+                                                    <p style={{ fontSize: '13px', color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{hw.description}</p>
+                                                    <div style={{ fontSize: '11px', color: 'var(--primary-navy)', fontWeight: '600', textTransform: 'uppercase', marginTop: '8px' }}>
+                                                        {hw.targetType === 'class' ? `Class: ${hw.courseMedium} • ${hw.courseClass}` : `Students: ${(hw.assignedStudentIds || []).length}`}
+                                                    </div>
+                                                    {hw.attachmentUrl && (
+                                                        <a href={hw.attachmentUrl} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '12px', marginTop: '10px', display: 'inline-block', textDecoration: 'none' }}>Download attachment</a>
+                                                    )}
+                                                </div>
+                                                <button type="button" onClick={() => handleDeleteHomework(hw)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', flexShrink: 0 }} title="Delete">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                }) : (
+                                    <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-light)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
+                                        No homework assigned yet.
+                                    </div>
                                 )}
                             </div>
                         </div>

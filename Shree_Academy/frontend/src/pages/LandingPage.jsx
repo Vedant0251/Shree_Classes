@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Shield, BookOpen, Star, ArrowRight, X } from 'lucide-react';
+import { User, Shield, BookOpen, Star, ArrowRight, X, Bell } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
 const LandingPage = () => {
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', course: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
+
+  const fetchAnnouncements = async () => {
+    try {
+      const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(5));
+      const snap = await getDocs(q);
+      const data = [];
+      snap.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
+      setAnnouncements(data);
+    } catch (error) {
+      console.error("Error fetching announcements:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
 
   const handleEnquirySubmit = async (e) => {
     e.preventDefault();
@@ -71,13 +88,28 @@ const LandingPage = () => {
             <Link to="/courses" className="btn btn-outline" style={{ padding: '16px 32px', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', backgroundColor: '#fff' }} onMouseOver={e => { e.currentTarget.style.backgroundColor = '#F8FAFC'; e.currentTarget.style.transform = 'translateY(-3px)'; }} onMouseOut={e => { e.currentTarget.style.backgroundColor = '#fff'; e.currentTarget.style.transform = 'translateY(0)'; }}>View Courses</Link>
           </div>
         </div>
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '100%', height: '480px', borderRadius: '24px', position: 'relative', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', transform: 'perspective(1000px) rotateY(-5deg)', transition: 'transform 0.5s ease' }} onMouseOver={e => e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg)'} onMouseOut={e => e.currentTarget.style.transform = 'perspective(1000px) rotateY(-5deg)'}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'url(https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop) center/cover' }}></div>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to top, rgba(15, 32, 60, 0.9) 0%, rgba(15, 32, 60, 0.1) 60%)' }}></div>
-            <div style={{ position: 'absolute', bottom: '30px', left: '30px', color: '#fff' }}>
-              <div style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(10px)', padding: '8px 16px', borderRadius: '20px', display: 'inline-block', marginBottom: '12px', fontSize: '14px', fontWeight: '600', border: '1px solid rgba(255,255,255,0.3)' }}>🔴 Live Interactive Classes</div>
-              <h3 style={{ fontSize: '28px', fontWeight: 'bold', textShadow: '0 2px 4px rgba(0,0,0,0.5)', color: '#fff' }}>Learn from the best educators</h3>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="card" style={{ padding: '32px', borderRadius: '24px', backgroundColor: '#F8FAFC', border: '1px solid var(--border-color)', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', height: '520px', display: 'flex', flexDirection: 'column' }}>
+            <div className="flex justify-between items-center" style={{ marginBottom: '24px', flexShrink: 0 }}>
+              <h2 style={{ fontSize: '28px', fontWeight: '800', color: 'var(--primary-navy)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Bell size={28} color="var(--accent-gold)" /> Latest Announcements
+              </h2>
+            </div>
+            <div className="custom-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflowY: 'auto', paddingRight: '12px' }}>
+              {announcements.length > 0 ? announcements.map((ann, i) => (
+                <div key={i} style={{ padding: '20px', borderRadius: '16px', backgroundColor: '#fff', borderLeft: '6px solid var(--accent-gold)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', transition: 'transform 0.2s', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateX(5px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateX(0)'}>
+                  <div style={{ fontSize: '12px', color: 'var(--accent-gold)', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    {ann.createdAt ? new Date(ann.createdAt.toDate()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently'}
+                  </div>
+                  <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary-navy)', marginBottom: '8px' }}>{ann.title}</h4>
+                  <p style={{ fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>{ann.content}</p>
+                </div>
+              )) : (
+                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-light)', backgroundColor: '#fff', borderRadius: '16px', border: '2px dashed #E2E8F0' }}>
+                  <Bell size={40} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
+                  <p style={{ fontSize: '16px' }}>No active announcements at the moment. Check back soon!</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

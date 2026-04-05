@@ -20,6 +20,12 @@ const TeacherDashboard = () => {
 
     const [lectures, setLectures] = useState([]);
     const [resources, setResources] = useState([]);
+    const [notices, setNotices] = useState([]);
+    
+    const [noticeTitle, setNoticeTitle] = useState('');
+    const [noticeContent, setNoticeContent] = useState('');
+    const [noticeMedium, setNoticeMedium] = useState('English');
+    const [noticeClass, setNoticeClass] = useState('10th');
 
     const [userProfile, setUserProfile] = useState(null);
     const [editName, setEditName] = useState('');
@@ -55,6 +61,12 @@ const TeacherDashboard = () => {
             const rData = [];
             snapRes.forEach(doc => rData.push({ id: doc.id, ...doc.data() }));
             setResources(rData);
+
+            const qNot = query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(20));
+            const snapNot = await getDocs(qNot);
+            const nData = [];
+            snapNot.forEach(doc => nData.push({ id: doc.id, ...doc.data() }));
+            setNotices(nData);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -62,10 +74,37 @@ const TeacherDashboard = () => {
 
     useEffect(() => {
         fetchUserData();
-        if (activeTab === 'Dashboard' || activeTab === 'Schedule' || activeTab === 'Resources' || activeTab === 'Settings') {
+        if (activeTab === 'Dashboard' || activeTab === 'Schedule' || activeTab === 'Resources' || activeTab === 'Settings' || activeTab === 'Notices') {
             fetchData();
         }
     }, [activeTab]);
+
+    const handleAddNotice = async (e) => {
+        e.preventDefault();
+        try {
+            await addDoc(collection(db, 'notices'), {
+                title: noticeTitle,
+                content: noticeContent,
+                courseMedium: noticeMedium,
+                courseClass: noticeClass,
+                postedBy: userName,
+                createdAt: serverTimestamp()
+            });
+            alert('Notice Published Successfully!');
+            setNoticeTitle('');
+            setNoticeContent('');
+            fetchData();
+        } catch(error) { console.error(error); alert('Failed to publish notice.'); }
+    };
+
+    const handleDeleteNotice = async (id) => {
+        if(window.confirm('Permanently delete this notice for students?')) {
+            try {
+                await deleteDoc(doc(db, 'notices', id));
+                fetchData();
+            } catch(e) { console.error(e); }
+        }
+    };
 
     const handleScheduleLecture = async (e) => {
         e.preventDefault();
@@ -181,7 +220,7 @@ const TeacherDashboard = () => {
                 </div>
 
                 <div className="sidebar-nav">
-                    {['Dashboard', 'Schedule', 'Resources', 'Performance', 'Settings'].map(tab => (
+                    {['Dashboard', 'Notices', 'Schedule', 'Resources', 'Performance', 'Settings'].map(tab => (
                         <div 
                             key={tab} 
                             onClick={() => setActiveTab(tab)} 
@@ -189,6 +228,7 @@ const TeacherDashboard = () => {
                             style={{ cursor: 'pointer', position: 'relative' }}
                         >
                             {tab === 'Dashboard' && <LayoutDashboard size={18} />}
+                            {tab === 'Notices' && <Bell size={18} />}
                             {tab === 'Schedule' && <Calendar size={18} />}
                             {tab === 'Performance' && <BarChart size={18} />}
                             {tab === 'Resources' && <BookOpen size={18} />}
@@ -285,6 +325,81 @@ const TeacherDashboard = () => {
                                 </h3>
                                 <div style={{ fontSize: '10px', color: '#CBD5E1', letterSpacing: '1px', marginBottom: '8px', fontWeight: '600' }}>AVERAGE DAILY TURNOUT</div>
                                 <div style={{ fontSize: '40px', fontWeight: 'bold', color: 'var(--accent-gold)', marginBottom: '40px' }}>94.2%</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Notices Tab */}
+                {activeTab === 'Notices' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        <div className="card">
+                            <h2 style={{ fontSize: '20px', marginBottom: '8px' }}>Post a New Notice</h2>
+                            <p style={{ color: 'var(--text-light)', fontSize: '13px', marginBottom: '24px' }}>Target notices to specific classes or mediums.</p>
+                            <form onSubmit={handleAddNotice} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Notice Title</label>
+                                    <input required type="text" value={noticeTitle} onChange={e => setNoticeTitle(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none' }} placeholder="E.g., Tomorrow's class timing change" />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Notice Content</label>
+                                    <textarea required value={noticeContent} onChange={e => setNoticeContent(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none', minHeight: '120px' }} placeholder="Provide details about the notice..."></textarea>
+                                </div>
+                                <div style={{ display: 'flex', gap: '16px' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Target Medium</label>
+                                        <select value={noticeMedium} onChange={e => setNoticeMedium(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                                            <option value="English">English</option>
+                                            <option value="Marathi">Marathi</option>
+                                            <option value="Foundation">Foundation</option>
+                                            <option value="General">General / All</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Target Class</label>
+                                        <select value={noticeClass} onChange={e => setNoticeClass(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                                            <option value="3rd">3rd Standard</option>
+                                            <option value="4th">4th Standard</option>
+                                            <option value="5th">5th Standard</option>
+                                            <option value="6th">6th Standard</option>
+                                            <option value="7th">7th Standard</option>
+                                            <option value="8th">8th Standard</option>
+                                            <option value="9th">9th Standard</option>
+                                            <option value="10th">10th Standard</option>
+                                            <option value="General">General / All</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" className="btn btn-primary" style={{ padding: '14px' }}>Publish Notice</button>
+                            </form>
+                        </div>
+
+                        <div className="card">
+                            <h2 style={{ fontSize: '20px', marginBottom: '24px' }}>History of Notices</h2>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {notices.length > 0 ? notices.map((not, i) => (
+                                    <div key={i} style={{ padding: '16px', borderRadius: '12px', backgroundColor: '#F8FAFC', border: '1px solid var(--border-color)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                                            <div>
+                                                <div style={{ fontSize: '12px', color: 'var(--text-light)', fontWeight: '600' }}>
+                                                    {not.createdAt ? new Date(not.createdAt.toDate()).toLocaleDateString() : 'Just now'}
+                                                </div>
+                                                <div style={{ fontSize: '10px', color: 'var(--primary-navy)', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '2px' }}>
+                                                    Target: {not.courseMedium} Medium • {not.courseClass}
+                                                </div>
+                                            </div>
+                                            <button onClick={() => handleDeleteNotice(not.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }}>
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                        <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--primary-navy)', marginBottom: '4px' }}>{not.title}</h4>
+                                        <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.5' }}>{not.content}</p>
+                                    </div>
+                                )) : (
+                                    <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-light)' }}>
+                                        No notices found.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

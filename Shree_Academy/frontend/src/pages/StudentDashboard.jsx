@@ -9,6 +9,7 @@ const StudentDashboard = () => {
     const [activeTab, setActiveTab] = useState('Dashboard');
     const [lectures, setLectures] = useState([]);
     const [resources, setResources] = useState([]);
+    const [notices, setNotices] = useState([]);
     const [payments, setPayments] = useState([]);
     const [userProfile, setUserProfile] = useState(null);
 
@@ -47,12 +48,19 @@ const StudentDashboard = () => {
             let resData = [];
             snapRes.forEach(d => resData.push({ id: d.id, ...d.data() }));
 
+            let qNot = query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(20));
+            let snapNot = await getDocs(qNot);
+            let notData = [];
+            snapNot.forEach(d => notData.push({ id: d.id, ...d.data() }));
+
             if (userProfile && userProfile.courseMedium && userProfile.courseClass) {
                 lecData = lecData.filter(l => (l.courseMedium === userProfile.courseMedium || l.courseMedium === 'General') && (l.courseClass === userProfile.courseClass || l.courseClass === 'General'));
                 resData = resData.filter(r => (r.courseMedium === userProfile.courseMedium || r.courseMedium === 'General') && (r.courseClass === userProfile.courseClass || r.courseClass === 'General'));
+                notData = notData.filter(n => (n.courseMedium === userProfile.courseMedium || n.courseMedium === 'General') && (n.courseClass === userProfile.courseClass || n.courseClass === 'General'));
             }
             setLectures(lecData.filter(l => new Date(l.time) >= new Date(new Date().setHours(0, 0, 0, 0))));
             setResources(resData);
+            setNotices(notData);
 
             if (auth.currentUser) {
                 let qPay = query(collection(db, 'payments'), where('studentId', '==', auth.currentUser.uid));
@@ -131,7 +139,7 @@ const StudentDashboard = () => {
                 </div>
 
                 <div className="sidebar-nav">
-                    {['Dashboard', 'My Courses', 'Schedule', 'Payments & Fees', 'Resources', 'Settings'].map(tab => (
+                    {['Dashboard', 'Notices', 'My Courses', 'Schedule', 'Payments & Fees', 'Resources', 'Settings'].map(tab => (
                         <div
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -139,6 +147,7 @@ const StudentDashboard = () => {
                             style={{ cursor: 'pointer', position: 'relative' }}
                         >
                             {tab === 'Dashboard' && <LayoutDashboard size={18} />}
+                            {tab === 'Notices' && <Bell size={18} />}
                             {tab === 'My Courses' && <Book size={18} />}
                             {tab === 'Schedule' && <Calendar size={18} />}
                             {tab === 'Payments & Fees' && <CreditCard size={18} />}
@@ -147,6 +156,7 @@ const StudentDashboard = () => {
                             {tab}
 
                             {/* Dynamic Red Dot Indicators */}
+                            {tab === 'Notices' && notices.length > 0 && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
                             {tab === 'Schedule' && lectures.length > 0 && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
                             {tab === 'Resources' && resources.length > 0 && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
                             {tab === 'Payments & Fees' && userProfile && ((userProfile.totalFees || 0) > (userProfile.paidFees || 0)) && <div style={{ width: '8px', height: '8px', backgroundColor: '#EF4444', borderRadius: '50%', position: 'absolute', right: '16px' }} />}
@@ -251,6 +261,38 @@ const StudentDashboard = () => {
                                 )}
                                 <button onClick={() => setActiveTab('Schedule')} className="btn btn-outline" style={{ width: '100%', marginTop: '8px' }}>Full Academic Calendar</button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Notices Tab */}
+                {activeTab === 'Notices' && (
+                    <div className="card">
+                        <h2 style={{ fontSize: '20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <Bell size={24} color="var(--accent-gold)" /> Academic Notices
+                        </h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {notices.length > 0 ? notices.map((not, i) => (
+                                <div key={i} style={{ padding: '24px', borderRadius: '12px', backgroundColor: '#F8FAFC', border: '1px solid var(--border-color)', borderLeft: '4px solid var(--accent-gold)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                        <div>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-light)', fontWeight: '600' }}>
+                                                {not.createdAt ? new Date(not.createdAt.toDate()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Recently'}
+                                            </div>
+                                            <div style={{ fontSize: '11px', color: 'var(--primary-navy)', fontWeight: 'bold', textTransform: 'uppercase', marginTop: '2px' }}>
+                                                Posted by: {not.postedBy || 'Faculty'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary-navy)', marginBottom: '8px' }}>{not.title}</h4>
+                                    <p style={{ fontSize: '15px', color: '#475569', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{not.content}</p>
+                                </div>
+                            )) : (
+                                <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-light)', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                                    <Bell size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
+                                    <p style={{ fontSize: '16px' }}>No new notices for your class at this time.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

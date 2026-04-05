@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, Clock, Settings, UserCheck, BarChart, Download, BookOpen, FileText, LogOut, Trash2, CreditCard, Edit } from 'lucide-react';
+import { LayoutDashboard, Users, Clock, Settings, UserCheck, BarChart, Download, BookOpen, FileText, LogOut, Trash2, CreditCard, Edit, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db, storage } from '../firebase';
 import { collection, getDocs, query, orderBy, limit, updateDoc, doc, addDoc, serverTimestamp, deleteDoc, increment } from 'firebase/firestore';
@@ -25,6 +25,10 @@ const AdminDashboard = () => {
     const [resources, setResources] = useState([]);
     
     const [payments, setPayments] = useState([]);
+    
+    const [announcements, setAnnouncements] = useState([]);
+    const [announcementTitle, setAnnouncementTitle] = useState('');
+    const [announcementContent, setAnnouncementContent] = useState('');
 
     // Edit User Modal State
     const [editingUser, setEditingUser] = useState(null);
@@ -60,6 +64,12 @@ const AdminDashboard = () => {
             const pData = [];
             snapPay.forEach((doc) => pData.push({ id: doc.id, ...doc.data() }));
             setPayments(pData);
+
+            const qAnn = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(20));
+            const snapAnn = await getDocs(qAnn);
+            const annData = [];
+            snapAnn.forEach((doc) => annData.push({ id: doc.id, ...doc.data() }));
+            setAnnouncements(annData);
 
         } catch (error) {
             console.error("Error fetching data: ", error);
@@ -139,6 +149,30 @@ const AdminDashboard = () => {
             } catch (err) { console.error("Error processing transaction:", err); alert('Failed to verify.'); }
         }
     }
+
+    const handleAddAnnouncement = async (e) => {
+        e.preventDefault();
+        try {
+            await addDoc(collection(db, 'announcements'), {
+                title: announcementTitle,
+                content: announcementContent,
+                createdAt: serverTimestamp()
+            });
+            alert('Announcement Published Successfully!');
+            setAnnouncementTitle('');
+            setAnnouncementContent('');
+            fetchData();
+        } catch(error) { console.error(error); alert('Failed to publish announcement.'); }
+    };
+
+    const handleDeleteAnnouncement = async (id) => {
+        if(window.confirm('Permanently delete this announcement from landing page?')) {
+            try {
+                await deleteDoc(doc(db, 'announcements', id));
+                fetchData();
+            } catch(e) { console.error(e); }
+        }
+    };
 
     const handleUpdateEnquiry = async (enqId, newStatus) => {
         try {
@@ -259,7 +293,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="sidebar-nav">
-                    {['Dashboard', 'All Users', 'Payments & Fees', 'Enquiries', 'Schedule', 'Resources', 'Settings'].map(tab => (
+                    {['Dashboard', 'Announcements', 'All Users', 'Payments & Fees', 'Enquiries', 'Schedule', 'Resources', 'Settings'].map(tab => (
                         <div 
                             key={tab} 
                             onClick={() => setActiveTab(tab)} 
@@ -267,6 +301,7 @@ const AdminDashboard = () => {
                             style={{ cursor: 'pointer', position: 'relative' }}
                         >
                             {tab === 'Dashboard' && <LayoutDashboard size={18} />}
+                            {tab === 'Announcements' && <Bell size={18} />}
                             {tab === 'All Users' && <UserCheck size={18} />}
                             {tab === 'Payments & Fees' && <CreditCard size={18} />}
                             {tab === 'Enquiries' && <FileText size={18} />}
@@ -365,6 +400,51 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                     </>
+                )}
+
+                {/* Announcements Tab */}
+                {activeTab === 'Announcements' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        <div className="card">
+                            <h2 style={{ fontSize: '20px', marginBottom: '8px' }}>Create New Announcement</h2>
+                            <p style={{ color: 'var(--text-light)', fontSize: '13px', marginBottom: '24px' }}>This will be displayed publicly on the landing page hero section.</p>
+                            <form onSubmit={handleAddAnnouncement} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Announcement Title</label>
+                                    <input required type="text" value={announcementTitle} onChange={e => setAnnouncementTitle(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none' }} placeholder="E.g., Admissions Open for 2024!" />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Detailed Content</label>
+                                    <textarea required value={announcementContent} onChange={e => setAnnouncementContent(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '14px', outline: 'none', minHeight: '120px' }} placeholder="Provide brief details about the announcement..."></textarea>
+                                </div>
+                                <button type="submit" className="btn btn-primary" style={{ padding: '14px' }}>Publish Announcement</button>
+                            </form>
+                        </div>
+
+                        <div className="card">
+                            <h2 style={{ fontSize: '20px', marginBottom: '24px' }}>Live Announcements</h2>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {announcements.length > 0 ? announcements.map((ann, i) => (
+                                    <div key={i} style={{ padding: '16px', borderRadius: '12px', backgroundColor: '#F8FAFC', border: '1px solid var(--border-color)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-light)', fontWeight: '600' }}>
+                                                {ann.createdAt ? new Date(ann.createdAt.toDate()).toLocaleDateString() : 'Just now'}
+                                            </div>
+                                            <button onClick={() => handleDeleteAnnouncement(ann.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }}>
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                        <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--primary-navy)', marginBottom: '4px' }}>{ann.title}</h4>
+                                        <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.5' }}>{ann.content}</p>
+                                    </div>
+                                )) : (
+                                    <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-light)' }}>
+                                        No active announcements found.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 {/* Edit User Modal Overlay */}

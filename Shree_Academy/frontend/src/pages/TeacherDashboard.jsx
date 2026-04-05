@@ -5,6 +5,41 @@ import { db, storage, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, limit, deleteDoc, doc, getDoc, updateDoc, where, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
+const STANDARD_LABELS = {
+    '3rd': '3rd Standard',
+    '4th': '4th Standard',
+    '5th': '5th Standard',
+    '6th': '6th Standard',
+    '7th': '7th Standard',
+    '8th': '8th Standard',
+    '9th': '9th Standard',
+    '10th': '10th Standard',
+};
+
+const ALL_STANDARD_VALUES = ['3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+
+/** English: 8–10 only; Marathi: 3–10 */
+const getAllowedStandardValues = (medium) => {
+    if (medium === 'English') return ['8th', '9th', '10th'];
+    if (medium === 'Marathi') return [...ALL_STANDARD_VALUES];
+    return [...ALL_STANDARD_VALUES];
+};
+
+const normalizeClassForMedium = (medium, currentClass) => {
+    const allowed = getAllowedStandardValues(medium);
+    if (currentClass === 'General') return 'General';
+    if (allowed.includes(currentClass)) return currentClass;
+    return allowed[0];
+};
+
+const classOptionsForMedium = (medium) => {
+    const vals = getAllowedStandardValues(medium);
+    return [
+        ...vals.map((v) => ({ value: v, label: STANDARD_LABELS[v] })),
+        { value: 'General', label: 'General / All' },
+    ];
+};
+
 const TeacherDashboard = () => {
     const navigate = useNavigate();
     const [accessOk, setAccessOk] = useState(false);
@@ -532,25 +567,17 @@ const TeacherDashboard = () => {
                                 <div style={{ display: 'flex', gap: '16px' }}>
                                     <div style={{ flex: 1 }}>
                                         <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Target Medium</label>
-                                        <select value={noticeMedium} onChange={e => setNoticeMedium(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                                        <select value={noticeMedium} onChange={(e) => { const m = e.target.value; setNoticeMedium(m); setNoticeClass((prev) => normalizeClassForMedium(m, prev)); }} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
                                             <option value="English">English</option>
                                             <option value="Marathi">Marathi</option>
-                                            <option value="Foundation">Foundation</option>
-                                            <option value="General">General / All</option>
                                         </select>
                                     </div>
                                     <div style={{ flex: 1 }}>
                                         <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Target Class</label>
                                         <select value={noticeClass} onChange={e => setNoticeClass(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
-                                            <option value="3rd">3rd Standard</option>
-                                            <option value="4th">4th Standard</option>
-                                            <option value="5th">5th Standard</option>
-                                            <option value="6th">6th Standard</option>
-                                            <option value="7th">7th Standard</option>
-                                            <option value="8th">8th Standard</option>
-                                            <option value="9th">9th Standard</option>
-                                            <option value="10th">10th Standard</option>
-                                            <option value="General">General / All</option>
+                                            {classOptionsForMedium(noticeMedium).map((o) => (
+                                                <option key={o.value} value={o.value}>{o.label}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -605,24 +632,17 @@ const TeacherDashboard = () => {
                             <div style={{ display: 'flex', gap: '16px' }}>
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Medium Target</label>
-                                    <select value={scheduleMedium} onChange={e => setScheduleMedium(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                                    <select value={scheduleMedium} onChange={(e) => { const m = e.target.value; setScheduleMedium(m); setScheduleClass((prev) => normalizeClassForMedium(m, prev)); }} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
                                         <option value="English">English</option>
                                         <option value="Marathi">Marathi</option>
-                                        <option value="Foundation">Foundation</option>
                                     </select>
                                 </div>
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Class Standard Target</label>
                                     <select value={scheduleClass} onChange={e => setScheduleClass(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
-                                        <option value="3rd">3rd Standard</option>
-                                        <option value="4th">4th Standard</option>
-                                        <option value="5th">5th Standard</option>
-                                        <option value="6th">6th Standard</option>
-                                        <option value="7th">7th Standard</option>
-                                        <option value="8th">8th Standard</option>
-                                        <option value="9th">9th Standard</option>
-                                        <option value="10th">10th Standard</option>
-                                        <option value="General">General / All</option>
+                                        {classOptionsForMedium(scheduleMedium).map((o) => (
+                                            <option key={o.value} value={o.value}>{o.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -680,24 +700,17 @@ const TeacherDashboard = () => {
                                 <div style={{ display: 'flex', gap: '16px' }}>
                                     <div style={{ flex: 1 }}>
                                         <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Target Medium</label>
-                                        <select value={resourceMedium} onChange={e => setResourceMedium(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                                        <select value={resourceMedium} onChange={(e) => { const m = e.target.value; setResourceMedium(m); setResourceClass((prev) => normalizeClassForMedium(m, prev)); }} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
                                             <option value="English">English</option>
                                             <option value="Marathi">Marathi</option>
-                                            <option value="Foundation">Foundation</option>
                                         </select>
                                     </div>
                                     <div style={{ flex: 1 }}>
                                         <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Target Class</label>
                                         <select value={resourceClass} onChange={e => setResourceClass(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
-                                            <option value="3rd">3rd Standard</option>
-                                            <option value="4th">4th Standard</option>
-                                            <option value="5th">5th Standard</option>
-                                            <option value="6th">6th Standard</option>
-                                            <option value="7th">7th Standard</option>
-                                            <option value="8th">8th Standard</option>
-                                            <option value="9th">9th Standard</option>
-                                            <option value="10th">10th Standard</option>
-                                            <option value="General">General / All</option>
+                                            {classOptionsForMedium(resourceMedium).map((o) => (
+                                                <option key={o.value} value={o.value}>{o.label}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -777,25 +790,17 @@ const TeacherDashboard = () => {
                                     <div style={{ display: 'flex', gap: '16px' }}>
                                         <div style={{ flex: 1 }}>
                                             <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Medium</label>
-                                            <select value={hwMedium} onChange={(e) => setHwMedium(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
+                                            <select value={hwMedium} onChange={(e) => { const m = e.target.value; setHwMedium(m); setHwClass((prev) => normalizeClassForMedium(m, prev)); }} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
                                                 <option value="English">English</option>
                                                 <option value="Marathi">Marathi</option>
-                                                <option value="Foundation">Foundation</option>
-                                                <option value="General">General / All</option>
                                             </select>
                                         </div>
                                         <div style={{ flex: 1 }}>
                                             <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', fontWeight: '600' }}>Standard</label>
                                             <select value={hwClass} onChange={(e) => setHwClass(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', outline: 'none' }}>
-                                                <option value="3rd">3rd Standard</option>
-                                                <option value="4th">4th Standard</option>
-                                                <option value="5th">5th Standard</option>
-                                                <option value="6th">6th Standard</option>
-                                                <option value="7th">7th Standard</option>
-                                                <option value="8th">8th Standard</option>
-                                                <option value="9th">9th Standard</option>
-                                                <option value="10th">10th Standard</option>
-                                                <option value="General">General / All</option>
+                                                {classOptionsForMedium(hwMedium).map((o) => (
+                                                    <option key={o.value} value={o.value}>{o.label}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
